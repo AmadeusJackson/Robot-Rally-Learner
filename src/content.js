@@ -1,4 +1,5 @@
 "use strict";
+const { mixSources } = require("./mix-content");
 const DEFAULT_SETTINGS = Object.freeze({
   levelCount: 3,
   questionsPerLevel: 2,
@@ -429,10 +430,11 @@ function generateOffline(decks, settings = {}) {
     throw Error(
       `Only ${questions.length} content questions can be grounded with ${distractors} compatible distractors after excluding title slides. Add explicit term definitions or factual sentences, reduce the requested count or distractors, or use local AI/manual authoring. No slide-location questions are substituted.`,
     );
+  const mixed = mixSources(questions, q => q.source.deckId);
   const levels = Array.from({ length: count }, (_, i) => ({
     id: `level-${i + 1}`,
     title: `Concept mission ${i + 1}`,
-    questions: questions.slice(i * per, (i + 1) * per),
+    questions: mixed.slice(i * per, (i + 1) * per),
   }));
   const checked = validateLevels(levels, decks);
   if (!checked.valid) throw Error(checked.errors.join("\n"));

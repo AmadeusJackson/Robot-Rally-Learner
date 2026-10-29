@@ -1,5 +1,6 @@
 "use strict";
 const { getEligibleSlides, validateLevels } = require("./content");
+const { mixSources } = require("./mix-content");
 const { settingsCheck, decksCheck } = require("./state-validation");
 
 // Build the task from the verified quotation so the model cannot invent a causal
@@ -29,7 +30,7 @@ async function generateAppleLevels(decks, settings, provider) {
       status.message ||
         "Apple Intelligence is unavailable on this Mac. Choose offline content practice.",
     );
-  const eligible = getEligibleSlides(decks);
+  const eligible = mixSources(getEligibleSlides(decks), item => item.deck.id);
   if (!eligible.length)
     throw Error(
       "No teaching content remains after skipping title slides. Import a presentation with content slides.",
@@ -126,10 +127,11 @@ async function generateAppleLevels(decks, settings, provider) {
     throw Error(
       `Only ${questions.length} of ${total} questions passed content and answer checks. Try fewer questions or more teaching material. Last check: ${lastFailure}`,
     );
+  const mixed = mixSources(questions, q => q.source.deckId);
   return Array.from({ length: count }, (_, i) => ({
     id: `apple-level-${i + 1}`,
     title: `Learning mission ${i + 1}`,
-    questions: questions.slice(i * per, (i + 1) * per),
+    questions: mixed.slice(i * per, (i + 1) * per),
   }));
 }
 module.exports = { generateAppleLevels, contentPrompt };

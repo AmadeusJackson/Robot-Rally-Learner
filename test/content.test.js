@@ -52,7 +52,7 @@ test("offline produces distinct grounded questions and real source references", 
   assert.equal(levels[0].questions.length, 2);
   assert.equal(validateLevels(levels, decks).valid, true);
   assert.match(levels[0].questions[0].prompt, /Complete the statement/);
-  assert.equal(levels[0].questions[0].choices[0].text, "Motor");
+  assert.equal(new Set(levels[0].questions.map(q => q.prompt)).size, 2);
   for (const level of levels)
     for (const q of level.questions) {
       assert.doesNotMatch(q.prompt, /slide|appears|presentation order/i);
@@ -166,9 +166,9 @@ test("colon definitions generate content matching rather than slide recognition"
     distractors: 2,
   })[0].questions[0];
   assert.equal(q.type, "matching");
-  assert.equal(q.choices[0].text, "Torque");
-  assert.match(q.prompt, /turning effect/);
-  assert.doesNotMatch(q.prompt, /Torque/);
+  assert.ok(["Torque", "Voltage", "Current"].includes(q.choices[0].text));
+  assert.ok(q.prompt.includes(q.source.quote.split(": ")[1]));
+  assert.ok(!q.prompt.includes(q.choices[0].text));
 });
 test("known shared definitions are rejected as ambiguous rather than mislabeled", () => {
   const deck = {

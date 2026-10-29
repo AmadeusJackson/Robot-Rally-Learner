@@ -76,6 +76,7 @@ test(
               requestAnimationFrame(() => requestAnimationFrame(r)),
             ),
         );
+      await page.waitForFunction(() => document.body.classList.contains("controller-connected"));
       await frames();
       const press = async (index) => {
         await page.evaluate((i) => {
@@ -107,6 +108,8 @@ test(
       await page.locator("#presentation-picker").waitFor({ state: "visible" });
       await frames();
       await focus("#presentation-picker .picker-list button");
+      await press(0);
+      await focus("#import-selected");
       await press(0);
       await page.waitForFunction(() => state.decks.length === 1);
       await press(5);

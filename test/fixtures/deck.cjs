@@ -1,7 +1,7 @@
 const AdmZip = require("adm-zip");
-function fixture(file) {
+function fixture(file, customStatements) {
   const z = new AdmZip();
-  const statements = [
+  const statements = customStatements || [
     "Physics foundations",
     "Energy is the capacity to do work.",
     "Velocity is the rate of change of position.",

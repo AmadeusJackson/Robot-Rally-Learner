@@ -624,3 +624,8 @@ canvas { aspect-ratio: 5 / 3; height: auto; }
   nav { margin-top: 22px; }
   main { padding-top: 18px; }
 }
+.picker-list button[aria-pressed="true"] {
+  background: #29392e;
+  border-color: var(--accent);
+  color: var(--accent);
+}

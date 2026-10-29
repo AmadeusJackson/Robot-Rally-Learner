@@ -125,14 +125,20 @@ async function importDecks() {
           ? await api.importPresentationPaths(paths)
           : [];
     const errors = [];
+    let added = 0;
     for (const deck of decks) {
       if (deck.error) errors.push(deck.name + ": " + deck.error);
-      else if (!state.decks.some((d) => d.id === deck.id))
+      else if (!state.decks.some((d) => d.id === deck.id)) {
         state.decks.push(deck);
+        added++;
+      }
     }
     await persist();
     show("library");
-    report(errors.join("\n"));
+    report([
+      added ? `Added ${added} presentation${added === 1 ? "" : "s"}. ${state.decks.length} in your library. Generate new draft missions to mix their content; existing saved missions stay unchanged.` : "",
+      ...errors,
+    ].filter(Boolean).join("\n"));
   } catch (e) {
     report(e.message);
   } finally {
@@ -277,8 +283,11 @@ $("generate").onclick = async () => {
     state.session = null;
     await persist();
     renderReview();
+    const used = new Set(state.levels.flatMap(level => level.questions.map(q => q.source.deckId)));
+    const omitted = state.decks.filter(deck => !used.has(deck.id));
     $("generation-status").textContent =
-      "Draft ready. Review and approve every question before play.";
+      `Draft ready: questions mixed from ${used.size} of ${state.decks.length} presentations. Review and approve every question before play.` +
+      (omitted.length ? ` Not included: ${omitted.map(d => d.name).join(", ")}. Increase the question count or check that these presentations contain usable teaching content.` : "");
   } catch (e) {
     $("generation-status").textContent =
       e.message +

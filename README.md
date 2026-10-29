@@ -80,3 +80,11 @@ Controller tests simulate standard Gamepad API input; physical Xbox compatibilit
 The window can shrink to 480 × 480. Navigation moves above the page in narrow windows; forms, cards, and action rows reflow, and longer pages scroll vertically. The game field preserves its proportions and scales to the space around the question and controls. Very short windows or long questions may still require scrolling. Dialogs and the on-screen keyboard scroll within the window and leave space for the controller legend. Switching screens starts at the top of the page.
 
 `npm run test:e2e` includes layout checks from 480 × 480 through 1920 × 1080, covering page overflow, game proportions, the file picker, and reachable keyboard actions.
+
+## Mixing presentations
+
+Select one or more PowerPoint files in the in-app browser (A toggles selection on Xbox), then choose **Import selected**. Select up to 20 per import, including files from different folders. You can import again later to add to the library. Cancel discards the selection.
+
+Generate new draft missions after adding presentations. Offline and Apple Intelligence generation shuffle eligible content within each presentation and take turns across presentations, so a larger deck does not crowd out smaller decks. Title and agenda slides remain excluded. Choose at least as many total questions as presentations to allow coverage of each. Sources with no usable questions may be omitted; the draft status lists presentations not represented. Existing saved missions keep their questions until you generate a new draft.
+
+The multi-presentation end-to-end test imports two real PPTX files together, adds a third, verifies mixed sources within levels, and reloads the saved workspace. Apple source mixing is covered with a simulated model provider.

@@ -14,7 +14,7 @@ window.PresentationPicker = (() => {
     dialog.id = "presentation-picker";
     dialog.className = "presentation-picker";
     dialog.setAttribute("aria-labelledby", "picker-title");
-    const title = element("h2", "Choose a PowerPoint");
+    const title = element("h2", "Choose presentations");
     title.id = "picker-title";
     const location = element("p");
     location.className = "picker-location";
@@ -29,7 +29,13 @@ window.PresentationPicker = (() => {
     cancel.onclick = () => dialog.close("cancel");
     const native = element("button", "Other location (macOS chooser)");
     native.onclick = () => dialog.close("native");
-    toolbar.append(up, cancel, native);
+    const selected = new Set();
+    const importSelected = element("button", "Import selected (0)");
+    importSelected.id = "import-selected";
+    importSelected.className = "primary";
+    importSelected.disabled = true;
+    importSelected.onclick = () => { chosen = [...selected]; dialog.close("selected"); };
+    toolbar.append(importSelected, up, cancel, native);
     dialog.append(title, location, toolbar, status, list);
     document.body.append(dialog);
     let chosen = [],
@@ -49,7 +55,7 @@ window.PresentationPicker = (() => {
         up.disabled = !result.path;
         up.onclick = () => browse(parent || undefined);
         status.textContent = result.entries.length
-          ? "D-pad to move · A to open a folder or import a file · B to cancel"
+          ? "D-pad to move · A to open a folder or select files · Choose Import selected when ready · B to cancel"
           : "No PowerPoint files or folders here.";
         for (const entry of result.entries) {
           const button = element(
@@ -57,11 +63,19 @@ window.PresentationPicker = (() => {
             (entry.isDirectory ? "▸ " : "▤ ") + entry.name,
           );
           button.dataset.path = entry.path;
+          if (!entry.isDirectory) button.setAttribute("aria-pressed", String(selected.has(entry.path)));
           button.onclick = () => {
             if (entry.isDirectory) browse(entry.path);
             else {
-              chosen = [entry.path];
-              dialog.close("selected");
+              if (selected.has(entry.path)) selected.delete(entry.path);
+              else if (selected.size < 20) selected.add(entry.path);
+              else {
+                status.textContent = "Select up to 20 presentations per import. Import these first, then add more.";
+                return;
+              }
+              button.setAttribute("aria-pressed", String(selected.has(entry.path)));
+              importSelected.textContent = `Import selected (${selected.size})`;
+              importSelected.disabled = !selected.size;
             }
           };
           list.append(button);
