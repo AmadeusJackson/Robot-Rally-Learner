@@ -38,4 +38,4 @@ Set repository Actions secrets:
 
 The same environment variables work for local builds. Electron Builder discovers the certificate, signs the app with hardened runtime and the JIT entitlement, and notarizes when all Apple credentials are present. Without credentials it produces a development distribution, not a notarized public release. Never commit certificates or credentials. Verify signed releases with `codesign --verify --deep --strict` and `spctl --assess --type execute` before distributing.
 
-The macOS 26 CI runner builds a bundled Swift Foundation Models helper for Apple Silicon. Intel packages omit it. Runtime detection checks the model’s actual availability, including on macOS 27; the app never invokes the fm command-line tool or asks users to accept its CLI terms.
+The macOS 15 CI runner with Xcode 26.3 builds a bundled Swift Foundation Models helper for Apple Silicon. Intel packages omit it. Runtime detection checks the model’s actual availability, including on macOS 27; the app never invokes the fm command-line tool or asks users to accept its CLI terms.

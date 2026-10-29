@@ -215,3 +215,57 @@ test("unstructured bullet fragments fail explicitly without slide-location fallb
     /No slide-location questions/,
   );
 });
+
+test("exclude Key Concepts agenda while retaining adjacent teaching overview", () => {
+  const agenda = [
+    "Cellular Respiration and Fermentation",
+    "Overview of Cellular Respiration",
+    "Glycolysis",
+    "Oxidation/breakdown of Pyruvate",
+    "Citric Acid Cycle",
+    "Oxidative Phosphorylation",
+    "Connections Among Carbohydrate, Protein, and Fat Metabolism",
+    "Anaerobic Respiration and Fermentation",
+    "<number>",
+    "Key Concepts:",
+  ];
+  const overview = [
+    "Overview of Cellular Respiration",
+    "Process by which living cells obtain energy from organic molecules",
+    "Aerobic respiration uses oxygen",
+  ];
+  const slides = [
+    { number: 1, lines: ["Biology"], text: "Biology" },
+    { number: 2, lines: agenda, text: agenda.join("\n"), isTitleSlide: false },
+    {
+      number: 3,
+      lines: overview,
+      text: overview.join("\n"),
+      isTitleSlide: false,
+    },
+    {
+      number: 4,
+      lines: ["Key Concepts:", ...overview],
+      text: overview.join("\n"),
+      isTitleSlide: false,
+    },
+    {
+      number: 5,
+      lines: ["Table of Contents", "Cells", "Membranes", "Transport"],
+      text: "Table of Contents",
+      isTitleSlide: false,
+    },
+    {
+      number: 6,
+      lines: ["Agenda:", "Power systems", "Drive systems"],
+      text: "Agenda",
+      isTitleSlide: false,
+    },
+  ];
+  assert.deepEqual(
+    getEligibleSlides([{ id: "biology", slides }]).map(
+      ({ slide }) => slide.number,
+    ),
+    [3, 4],
+  );
+});

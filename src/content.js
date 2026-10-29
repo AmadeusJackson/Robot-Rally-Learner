@@ -263,6 +263,21 @@ function bounded(value, min, max, fallback) {
 }
 // The opening slide is excluded even when a deck omits title placeholders.
 // Other title-only slides use import metadata; legacy libraries use a conservative heading heuristic.
+function isTopicOutline(lines) {
+  const meaningful = lines
+    .map((line) => line.trim())
+    .filter((line) => line && !/^(?:<number>|\d+)$/i.test(line));
+  const marker =
+    /^(?:agenda|(?:table of )?contents|key concepts|topics(?: covered)?|outline)\s*[:–—-]?\s*$/i;
+  if (!meaningful.some((line) => marker.test(line))) return false;
+  const topics = meaningful.filter((line) => !marker.test(line));
+  if (topics.length < 2) return false;
+  // Keep teaching slides even when they use a "Key concepts" heading. A factual
+  // sentence, explicit definition, or explanatory phrase is evidence of content.
+  const factual =
+    /\b(?:is|are|means|has|have|can|requires?|converts?|stores?|measures?|transmits?|produces?|controls?|uses?|obtains?|releases?|provides?|contains?|occurs?|consists?|depends?|involves?|forms?|transfers?|breaks?|combines?)\b|\b(?:process|mechanism|method) by which\b|:\s+\S|[.!?]$/i;
+  return topics.every((line) => line.length < 160 && !factual.test(line));
+}
 function getEligibleSlides(decks) {
   const eligible = [];
   for (const deck of Array.isArray(decks) ? decks : []) {
@@ -278,7 +293,7 @@ function getEligibleSlides(decks) {
       const lines = Array.isArray(slide.lines)
         ? slide.lines.filter((line) => typeof line === "string" && line.trim())
         : [];
-      if (!lines.length) continue;
+      if (!lines.length || isTopicOutline(lines)) continue;
       if (
         slide.isTitleSlide === undefined &&
         lines.length <= 2 &&

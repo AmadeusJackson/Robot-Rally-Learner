@@ -87,3 +87,16 @@ test("Apple response rejects duplicate or missing choices", async () => {
     /requested answer options/,
   );
 });
+test("playable prompt is anchored to the quote rather than a model-invented relationship", async () => {
+  const levels = await generateAppleLevels(
+    decks,
+    settings,
+    provider({
+      prompt: "Which pathway immediately follows pyruvate oxidation?",
+    }),
+  );
+  assert.equal(
+    levels[0].questions[0].prompt,
+    "Complete this explanation with the term taught in the lesson: “_____ is the rate of change of velocity.”",
+  );
+});
