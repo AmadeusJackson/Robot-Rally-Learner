@@ -4,7 +4,6 @@ const { _electron: electron } = require("playwright");
 const fs = require("node:fs/promises");
 const path = require("node:path");
 const os = require("node:os");
-const http = require("node:http");
 const fixture = require("./fixtures/deck.cjs");
 const root = path.resolve(__dirname, "..");
 test(
@@ -32,13 +31,6 @@ test(
       );
       return { a, p };
     };
-    const server = http.createServer((req, res) => {
-      res.setHeader("Content-Type", "application/json");
-      if (req.url === "/api/tags")
-        res.end(JSON.stringify({ models: [{ name: "fixture-model" }] }));
-      else res.end(JSON.stringify({ response: '{"levels":[]}' }));
-    });
-    await new Promise((r) => server.listen(0, "127.0.0.1", r));
     try {
       let launched = await launch();
       app = launched.a;
@@ -59,6 +51,7 @@ test(
       await page.locator('[data-setting="levelCount"]').fill("2");
       await page.locator('[data-setting="questionsPerLevel"]').fill("1");
       await page.locator('[data-setting="distractors"]').fill("1");
+      await page.locator("#mode").selectOption("offline");
       await page.locator("#generate").click();
       await page.locator("#review").waitFor({ state: "visible" });
       await page.locator("#approved").check();
@@ -92,29 +85,18 @@ test(
       await page.waitForFunction(async () =>
         Boolean((await window.desktopAPI.loadState()).session),
       );
-      const endpoint = `http://127.0.0.1:${server.address().port}`;
-      const models = await page.evaluate(
-        (ep) => window.desktopAPI.checkOllama(ep),
-        endpoint,
+      const availability = await page.evaluate(() =>
+        window.desktopAPI.checkAppleAI(),
       );
-      assert.deepEqual(models.models, ["fixture-model"]);
-      const rejected = await page.evaluate(async (ep) => {
-        const s = await window.desktopAPI.loadState();
-        try {
-          await window.desktopAPI.generateOllama({
-            decks: s.decks,
-            settings: { ...s.settings, model: "fixture-model", endpoint: ep },
-          });
-          return false;
-        } catch {
-          return true;
+      assert.equal(typeof availability.available, "boolean");
+      const contentState = await page.evaluate(() =>
+        window.desktopAPI.loadState(),
+      );
+      for (const level of contentState.levels)
+        for (const q of level.questions) {
+          assert.ok(q.source.slideNumber > 1);
+          assert.doesNotMatch(q.prompt, /slide|presentation/i);
         }
-      }, endpoint);
-      assert.equal(rejected, true);
-      const remote = await page.evaluate(() =>
-        window.desktopAPI.checkOllama("https://example.com"),
-      );
-      assert.equal(remote.available, false);
       await app.close();
       app = null;
       launched = await launch();
@@ -144,7 +126,6 @@ test(
       assert.deepEqual(errors, []);
     } finally {
       if (app) await app.close();
-      await new Promise((r) => server.close(r));
       await fs.rm(temp, { recursive: true, force: true });
     }
   },

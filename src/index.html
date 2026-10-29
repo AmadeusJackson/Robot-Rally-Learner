@@ -109,13 +109,17 @@
         <h1>Mission builder</h1>
         <p>
           All imported presentations are included. Every question must pass
-          validation and your review before play.
+          validation and your review before play. Title and cover slides are
+          skipped so questions focus on the subject matter.
+        </p>
+        <p id="apple-status" role="status">
+          Checking Apple Intelligence availability…
         </p>
         <div class="panel form-grid" id="config-form">
           <label
             >Generation mode<select id="mode">
-              <option value="offline">Offline · exact-text recall</option>
-              <option value="ollama">Ollama · experimental local AI</option>
+              <option value="apple">Apple Intelligence · on-device AI</option>
+              <option value="offline">Offline · content practice</option>
             </select></label
           ><label
             >Difficulty<select data-setting="difficulty">
@@ -181,10 +185,11 @@
           >
         </div>
         <p class="notice">
-          Offline mode tests exact text from slides, not conceptual
-          understanding. AI accuracy has not been evaluated. Source quotations
-          alone cannot prove that a generated inference is correct; review all
-          questions.
+          Offline content practice uses definitions and fill-in-the-blank
+          questions grounded in your slides. It does not ask you to memorize
+          slide locations. Apple Intelligence question accuracy has not been
+          evaluated. Source quotations alone cannot prove that a generated
+          inference is correct; review all questions.
         </p>
         <button id="generate" class="primary">Generate draft missions →</button
         ><button id="open-review">Review saved missions</button>
@@ -217,16 +222,16 @@
         <div class="eyebrow">MAKE YOURSELF AT HOME</div>
         <h1>Settings & controls</h1>
         <div class="panel form-grid">
+          <div>
+            <h2>Apple Intelligence</h2>
+            <p>
+              Question generation uses the on-device model when it is available
+              on this Mac. No model download or endpoint configuration is
+              required in this app.
+            </p>
+            <button id="refresh-apple">Check availability again</button>
+          </div>
           <label
-            >Local Ollama endpoint<input
-              data-setting="endpoint"
-              type="url" /></label
-          ><label
-            >Available model<select data-setting="model" id="model">
-              <option value="">Refresh to detect models</option>
-            </select></label
-          ><button id="refresh">Detect local models</button
-          ><label
             >Controller dead zone<input
               data-setting="deadZone"
               type="number"
@@ -235,7 +240,7 @@
               step="0.01"
           /></label>
         </div>
-        <p id="model-status"></p>
+        <p id="apple-settings-status" role="status"></p>
         <div class="panel">
           <h2>Drive your way</h2>
           <p>
@@ -290,6 +295,7 @@
               Drive over an answer to collect it.
             </p>
             <p id="hint"></p>
+            <button id="reveal-hint" hidden>Reveal source evidence</button>
           </div>
           <div class="touch">
             <button data-dir="up" aria-label="Drive up">↑</button>

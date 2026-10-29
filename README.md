@@ -9,7 +9,7 @@ Install the matching macOS DMG by dragging the app to Applications. See [BUILD_M
 1. Import a `.pptx` presentation into the library.
 2. Inspect the extracted slides, notes, tables, and embedded images.
 3. Configure level count, questions, difficulty, scoring, time limits, hints, speed, and controller dead zone.
-4. Generate limited deterministic questions offline, or use an installed local Ollama model.
+4. Generate limited deterministic questions offline, or use Apple Intelligence on a supported Mac.
 5. Preview every challenge, its correct answers, and source quotation. Edit the JSON if necessary, validate it, and approve it before playing.
 6. Drive with WASD, arrow keys, a connected standard-mapped Xbox controller, or the on-screen controls. Collect the requested answers and review explanations and mistakes.
 
@@ -17,13 +17,15 @@ Settings, imported content, levels, results, and the resumable session are store
 
 ## Content and accuracy
 
-Deterministic mode creates limited extractive recall questions from slide text. It does not infer cause and effect or interpret diagrams. It may reject a deck with insufficient usable or distinct text; it does not silently invent questions.
+Offline content practice creates term-definition matching and factual sentence-completion questions from slide text. It skips the opening slide and identified title-only slides, and never asks which slide contained a statement. It does not infer cause and effect or interpret diagrams. It may reject a deck with insufficient usable or distinct text; it does not silently invent questions.
 
-Ollama integration is optional. Start Ollama separately, install a model, configure its loopback HTTP endpoint (such as `http://127.0.0.1:11434`) in Settings, refresh models, and choose one. Downloading Ollama or a model requires internet access; inference with an installed model is local. AI accuracy has **not been evaluated**. A valid schema and matching source quotation are necessary checks but do not establish semantic correctness. A person must review the answer labels, distractors, explanations, and source evidence before approving gameplay.
+Apple Intelligence is detected automatically using Apple's Foundation Models framework. On Apple Silicon Macs running macOS 26 or later (including macOS 27), the app checks whether Apple Intelligence is enabled and its model is ready. When available, it is selected automatically. No Ollama installation, cloud account, API key, or terminal setup is needed. Unsupported Macs can explicitly choose offline content practice. Model download/readiness is managed by macOS. The app reports unavailable reasons and never silently substitutes offline questions after an AI failure.
+
+Apple generation processes teaching slides individually, skips title slides, and asks about their subject matter. Generated answers must include an exact source quotation and pass validation before preview. A human must still review answer labels and explanations: a few successful test questions do not establish general AI accuracy.
 
 Challenge data supports concept identification, ordered assembly, cause-and-effect chains, matching, identifying incorrect statements, and troubleshooting. These modes share the answer-collection mechanic. Model or manually authored content determines the educational quality and conceptual difficulty. Difficulty is guidance for AI generation; deterministic mode remains limited recall.
 
-PowerPoint text, speaker notes, tables, and supported embedded raster images are extracted locally. Images are available for human review; automatic OCR or visual reasoning over image-only slides is not provided. Legacy `.ppt` requires a separately installed LibreOffice application at `/Applications/LibreOffice.app` to convert it locally. If conversion is unavailable, save the presentation as `.pptx` in PowerPoint or LibreOffice first. LibreOffice and Ollama are not bundled in the DMG.
+PowerPoint text, speaker notes, tables, and supported embedded raster images are extracted locally. Images are available for human review; automatic OCR or visual reasoning over image-only slides is not provided. Legacy `.ppt` requires a separately installed LibreOffice application at `/Applications/LibreOffice.app` to convert it locally. If conversion is unavailable, save the presentation as `.pptx` in PowerPoint or LibreOffice first. LibreOffice is not bundled in the DMG.
 
 ## Development
 
@@ -31,23 +33,27 @@ PowerPoint text, speaker notes, tables, and supported embedded raster images are
 npm ci
 npm test
 npm run test:e2e
+npm run build:apple
+npm run test:e2e
 npm start
 npm run dist:mac
 ```
 
-Use Node.js 24. `ROBOT_RALLY_USER_DATA` may point to an isolated data directory for testing; normal app launches use Electron’s user-data location. macOS packaging must run on macOS. All application assets are bundled; the renderer uses no remote scripts or fonts. The interface remains vanilla JavaScript to retain the small prototype's useful canvas code and avoid a framework migration; it is not a TypeScript/React rewrite.
+Use Node.js 24 and Xcode 26 or later with the macOS 26+ SDK to build the bundled Apple Intelligence helper. Intel builds omit the helper and use offline/manual questions. `ROBOT_RALLY_USER_DATA` may point to an isolated data directory for testing; normal app launches use Electron’s user-data location. macOS packaging must run on macOS. All application assets are bundled; the renderer uses no remote scripts or fonts. The interface remains vanilla JavaScript to retain the small prototype's useful canvas code and avoid a framework migration; it is not a TypeScript/React rewrite.
 
 Architecture:
 
 - `src/main.js` / `src/preload.js`: narrow IPC, native dialogs, local generation, and desktop lifecycle.
 - `src/extraction.js`: PowerPoint import and local legacy conversion.
 - `src/persistence.js`: local state storage.
-- `src/ollama.js`: bounded HTTP requests to loopback-only Ollama endpoints.
-- `src/content.js`: deterministic generation and challenge validation.
+- `src/content.js`: content question generation, title-slide filtering, and challenge validation.
+- `native/AppleModel.swift`, `src/apple-ai.js`, `src/apple-generation.js`: native on-device model availability, structured generation, and source validation.
 - `src/game-core.js`: pure input, collision, scoring, and progression functions.
 - `src/app.js`, `src/index.html`, `src/style.css`: interface, source review, canvas gameplay, and result history.
 - `test/`: focused automated checks. Passing these checks does not establish physical controller compatibility, semantic AI accuracy, or notarization.
 
 ## Release verification
 
-Before public distribution, test a signed and notarized installer on clean Intel and Apple Silicon Macs, a physical Xbox controller, real-world `.ppt` conversion, and the chosen Ollama models. Run the repository's GitHub Actions workflow and inspect both installer artifacts. Local packaging success does not prove a remote CI run has succeeded.
+Before public distribution, test a signed and notarized installer on clean Intel and Apple Silicon Macs, a physical Xbox controller, real-world `.ppt` conversion, and Apple Intelligence generation on representative teaching materials. Run the repository's GitHub Actions workflow and inspect both installer artifacts. Local packaging success does not prove a remote CI run has succeeded.
+
+Existing slide-location missions are cleared during upgrade so they cannot be resumed. Imported presentations, settings, and result history are preserved. Source hints cite the slide without revealing its answer; choose Reveal source evidence to view the quotation.

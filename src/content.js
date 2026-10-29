@@ -261,58 +261,162 @@ function bounded(value, min, max, fallback) {
     ? Math.min(max, Math.max(min, Math.floor(n)))
     : fallback;
 }
+// The opening slide is excluded even when a deck omits title placeholders.
+// Other title-only slides use import metadata; legacy libraries use a conservative heading heuristic.
+function getEligibleSlides(decks) {
+  const eligible = [];
+  for (const deck of Array.isArray(decks) ? decks : []) {
+    if (!deck || !Array.isArray(deck.slides)) continue;
+    for (const [index, slide] of deck.slides.entries()) {
+      if (
+        !slide ||
+        index === 0 ||
+        slide.number === 1 ||
+        slide.isTitleSlide === true
+      )
+        continue;
+      const lines = Array.isArray(slide.lines)
+        ? slide.lines.filter((line) => typeof line === "string" && line.trim())
+        : [];
+      if (!lines.length) continue;
+      if (
+        slide.isTitleSlide === undefined &&
+        lines.length <= 2 &&
+        lines.every(
+          (line) =>
+            line.length < 100 &&
+            !/[:.!?]|\b(?:is|are|means|has|have|can|requires|converts|stores|measures|transmits|produces|controls)\b/i.test(
+              line,
+            ),
+        )
+      )
+        continue;
+      eligible.push({ deck, slide });
+    }
+  }
+  return eligible;
+}
+function factFromLine(line) {
+  const quote = line.replace(/\s+/g, " ").trim();
+  if (quote.length < 14 || quote.length > 300) return null;
+  const termPattern = "([\\p{L}\\p{N}][\\p{L}\\p{N} '’()/-]{0,69}?)";
+  let match = quote.match(
+    new RegExp("^" + termPattern + "\\s*:\\s+(.{8,})$", "u"),
+  );
+  if (match)
+    return {
+      term: match[1].trim(),
+      predicate: match[2],
+      connector: ":",
+      group: "definition",
+      quote,
+    };
+  match = quote.match(
+    new RegExp(
+      "^" +
+        termPattern +
+        "\\s+(is|are|means|has|have|can|requires|converts|stores|measures|transmits|produces|controls)\\s+(.{8,})$",
+      "iu",
+    ),
+  );
+  if (!match || match[1].trim().split(/\s+/).length > 7) return null;
+  const connector = match[2].toLowerCase();
+  return {
+    term: match[1].trim(),
+    predicate: match[3],
+    connector,
+    group: ["is", "means"].includes(connector)
+      ? "singular-definition"
+      : connector,
+    quote,
+  };
+}
 function generateOffline(decks, settings = {}) {
   const count = bounded(settings.levelCount, 1, 20, 3),
     per = bounded(settings.questionsPerLevel, 1, 20, 2),
     distractors = bounded(settings.distractors, 1, 7, 3);
   const pool = [];
-  for (const d of decks || [])
-    for (const s of d.slides || [])
-      for (const line of s.lines || []) {
-        const text = line.replace(/\s+/g, " ").trim();
-        if (
-          text.length >= 12 &&
-          text.length <= 160 &&
-          !pool.some((p) => normalize(p.text) === normalize(text))
-        )
-          pool.push({ text, deck: d, slide: s });
-      }
+  for (const { deck, slide } of getEligibleSlides(decks)) {
+    for (const line of slide.lines || []) {
+      const fact = factFromLine(line);
+      if (
+        !fact ||
+        /^(?:this|that|it|these|those|we|you|they|he|she)$/i.test(fact.term) ||
+        normalize(fact.predicate).includes(normalize(fact.term))
+      )
+        continue;
+      if (!pool.some((p) => normalize(p.quote) === normalize(fact.quote)))
+        pool.push({ ...fact, deck, slide });
+    }
+  }
   const questions = [];
   for (const item of pool) {
-    const corpus = normalize(
-      [item.slide.text, ...item.slide.lines, item.slide.notes || ""].join(" "),
-    );
+    // Explicitly shared predicates (including known synonyms) cannot yield a unique answer.
+    if (
+      pool.some(
+        (p) =>
+          normalize(p.term) !== normalize(item.term) &&
+          normalize(p.predicate) === normalize(item.predicate),
+      )
+    )
+      continue;
+    const seen = new Set([normalize(item.term)]);
     const alternatives = pool
-      .filter((p) => !corpus.includes(normalize(p.text)))
+      .filter((p) => {
+        const term = normalize(p.term);
+        if (
+          p.group !== item.group ||
+          seen.has(term) ||
+          normalize(item.quote).includes(term) ||
+          term.includes(normalize(item.term)) ||
+          normalize(item.term).includes(term)
+        )
+          return false;
+        // A term with this same evidenced relation is not a defensible distractor.
+        if (
+          pool.some(
+            (other) =>
+              normalize(other.term) === term &&
+              normalize(other.predicate) === normalize(item.predicate),
+          )
+        )
+          return false;
+        seen.add(term);
+        return true;
+      })
       .slice(0, distractors);
     if (alternatives.length < distractors) continue;
-    const id = `extract-${questions.length + 1}`;
+    const definition = [":", "is", "are", "means"].includes(item.connector);
+    const prompt =
+      item.connector === ":"
+        ? `Which term matches this definition? “${item.predicate}”`
+        : `Complete the statement: “_____ ${item.connector} ${item.predicate}”`;
     questions.push({
-      id,
-      type: "concept",
-      title: `Slide ${item.slide.number} recall`,
-      prompt: `Which exact statement appears on slide ${item.slide.number} of “${item.deck.name}”?`,
+      id: `content-${questions.length + 1}`,
+      type: definition ? "matching" : "concept",
+      title: definition ? "Match the concept" : "Complete the fact",
+      prompt,
       choices: [
-        { id: "answer", text: item.text },
-        ...alternatives.map((p, i) => ({ id: `option-${i}`, text: p.text })),
+        { id: "answer", text: item.term },
+        ...alternatives.map((p, i) => ({ id: `option-${i}`, text: p.term })),
       ],
       correctIds: ["answer"],
       ordered: false,
-      explanation: `This is a slide-recall exercise. The other statements are not on this slide; they are not being labeled false. Source: “${item.text}”`,
+      explanation: `${item.term} completes this statement. The presentation states: “${item.quote}”`,
       source: {
         deckId: item.deck.id,
         slideNumber: item.slide.number,
-        quote: item.text,
+        quote: item.quote,
       },
     });
   }
   if (questions.length < count * per)
     throw Error(
-      `Only ${questions.length} distinct extractive questions can be grounded with ${distractors} distractors. Reduce levels, questions, or distractors; import more slides; or author questions in the preview. Offline mode tests slide recall, not conceptual understanding.`,
+      `Only ${questions.length} content questions can be grounded with ${distractors} compatible distractors after excluding title slides. Add explicit term definitions or factual sentences, reduce the requested count or distractors, or use local AI/manual authoring. No slide-location questions are substituted.`,
     );
   const levels = Array.from({ length: count }, (_, i) => ({
     id: `level-${i + 1}`,
-    title: `Recall mission ${i + 1}`,
+    title: `Concept mission ${i + 1}`,
     questions: questions.slice(i * per, (i + 1) * per),
   }));
   const checked = validateLevels(levels, decks);
@@ -325,4 +429,5 @@ module.exports = {
   LEVELS_SCHEMA,
   validateLevels,
   generateOffline,
+  getEligibleSlides,
 };

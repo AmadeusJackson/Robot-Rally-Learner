@@ -126,6 +126,22 @@ function parsePptx(input) {
     if (!doc) throw Error("Missing slide component.");
     const relationships = rels(name);
     const lines = paragraphs(doc);
+    const titleLines = [];
+    const bodyLines = [];
+    for (const shape of find(doc, "sp")) {
+      const placeholders = find(shape, "ph");
+      const type = placeholders[0]?.["@type"];
+      if (["title", "ctrTitle", "subTitle"].includes(type))
+        titleLines.push(...paragraphs(shape));
+      else if (!["dt", "ftr", "sldNum"].includes(type))
+        bodyLines.push(...paragraphs(shape));
+    }
+    const isTitleSlide =
+      index === 0 ||
+      (titleLines.length > 0 &&
+        bodyLines.length === 0 &&
+        find(doc, "tbl").length === 0);
+
     const tables = find(doc, "tbl").map((t) =>
       arr(t.tr).map((row) =>
         arr(row.tc).map((cell) => paragraphs(cell).join("\n")),
@@ -168,6 +184,8 @@ function parsePptx(input) {
     }
     return {
       number: index + 1,
+      isTitleSlide,
+      title: titleLines.join(" "),
       lines,
       text: lines.join("\n"),
       notes,
