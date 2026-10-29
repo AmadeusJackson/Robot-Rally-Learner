@@ -1,0 +1,24 @@
+{
+  "name": "robot-rally-desktop",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Local PowerPoint-to-robot-learning game",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist:win": "electron-builder --win nsis",
+    "dist:mac": "electron-builder --mac dmg",
+    "dist:linux": "electron-builder --linux AppImage"
+  },
+  "dependencies": { "adm-zip": "^0.5.16" },
+  "devDependencies": { "electron": "^38.3.0", "electron-builder": "^26.0.12" },
+  "build": {
+    "appId": "org.robotrally.learning",
+    "productName": "Robot Rally Learning",
+    "files": ["src/**/*", "package.json"],
+    "directories": {"output":"dist"},
+    "win": {"target":"nsis"},
+    "mac": {"target":"dmg"},
+    "linux": {"target":"AppImage"}
+  }
+}
