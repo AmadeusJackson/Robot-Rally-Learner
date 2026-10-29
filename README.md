@@ -57,3 +57,20 @@ Architecture:
 Before public distribution, test a signed and notarized installer on clean Intel and Apple Silicon Macs, a physical Xbox controller, real-world `.ppt` conversion, and Apple Intelligence generation on representative teaching materials. Run the repository's GitHub Actions workflow and inspect both installer artifacts. Local packaging success does not prove a remote CI run has succeeded.
 
 Existing slide-location missions are cleared during upgrade so they cannot be resumed. Imported presentations, settings, and result history are preserved. Source hints cite the slide without revealing its answer; choose Reveal source evidence to view the quotation.
+
+## Xbox controller navigation
+
+The controller works across the dashboard, library, mission builder, review, settings, and game. Connect it to macOS before opening the app, then release all buttons/sticks briefly to enable input.
+
+- D-pad or left stick: move focus through controls. In play, drive the robot.
+- A: select, activate buttons, toggle a checkbox, or expand details. On a text field, open the on-screen keyboard.
+- Left/right: decrease/increase a focused number or change a selected option.
+- B: close a dialog or go back; in play, pause. From the pause screen, B saves and exits.
+- LB/RB: switch app screens. Right stick: scroll the current panel.
+- Menu/Start: pause or resume. Y: reveal source evidence when hints are enabled.
+
+Pause and completion screens expose Continue, Retry level, and Save & exit. A disconnected controller or loss of app focus pauses gameplay. Input must return to neutral after reconnecting or switching between menus and driving, preventing held buttons from triggering unintended actions.
+
+Import opens an in-app browser for PowerPoint files in Downloads, Documents, and Desktop. Folders, file selection, cancellation, and removal confirmation work with the controller. The optional Other location button opens the macOS chooser. macOS permission dialogs and that system chooser are outside the app's controller support and may require a mouse or keyboard. Hidden files and links escaping the allowed folders are not listed.
+
+Controller tests simulate standard Gamepad API input; physical Xbox compatibility still depends on macOS pairing/mapping and should be checked on the user's hardware.

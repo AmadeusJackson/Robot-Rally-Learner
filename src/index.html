@@ -9,6 +9,7 @@
     />
     <title>Robot Rally Learning</title>
     <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="controller-ui.css" />
   </head>
   <body>
     <aside>
@@ -244,13 +245,17 @@
         <div class="panel">
           <h2>Drive your way</h2>
           <p>
-            Keyboard: WASD or arrow keys. Escape pauses. Xbox: left stick /
-            D-pad to drive, Start to pause, A to continue feedback.
+            Keyboard: WASD or arrow keys. Escape pauses. Xbox: D-pad / left
+            stick to navigate, A to select, B to go back, LB / RB to switch
+            screens, and right stick to scroll. Left / right adjusts a focused
+            setting. During play, the left stick drives and Menu pauses.
           </p>
           <p id="controller">Controller: not detected</p>
           <p>
-            Click the field before driving. Movement pauses when the app loses
-            focus. On-screen controls support touch and mouse.
+            A connected controller works throughout Robot Rally. A opens an
+            on-screen keyboard for text editing. Movement pauses when the app
+            loses focus. macOS permission prompts and the optional system file
+            chooser may still need a keyboard or mouse.
           </p>
         </div>
       </section>
@@ -318,6 +323,8 @@
       </section>
     </main>
     <script src="game-core.js"></script>
+    <script src="presentation-picker.js"></script>
+    <script src="controller-ui.js"></script>
     <script src="app.js"></script>
   </body>
 </html>

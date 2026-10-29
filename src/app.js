@@ -34,8 +34,6 @@ let state = {
   playing = false,
   keys = new Set(),
   lastTime = 0,
-  lastPadA = false,
-  lastPadStart = false,
   overlayAction = null,
   saveTimer = 0;
 const bot = { x: 500, y: 550, radius: 18, angle: 0 },
@@ -118,7 +116,13 @@ async function importDecks() {
   busy = true;
   report("Importing presentation content…");
   try {
-    const decks = await api.selectPresentations();
+    const paths = await window.PresentationPicker.choose();
+    const decks =
+      paths === null
+        ? await api.selectPresentations()
+        : paths.length
+          ? await api.importPresentationPaths(paths)
+          : [];
     const errors = [];
     for (const deck of decks) {
       if (deck.error) errors.push(deck.name + ": " + deck.error);
@@ -161,11 +165,11 @@ function renderLibrary() {
     const inspect = node("button", "Inspect slides");
     inspect.onclick = () => renderSlides(deck);
     const remove = node("button", "Remove");
-    remove.onclick = () => {
+    remove.onclick = async () => {
       if (
-        !confirm(
+        !(await controllerUI.confirm(
           "Remove this presentation? Missions and saved runs that depend on it will be cleared.",
-        )
+        ))
       )
         return;
       state.decks = state.decks.filter((d) => d.id !== deck.id);
@@ -753,6 +757,40 @@ document.querySelectorAll("[data-dir]").forEach((el) => {
     el.addEventListener(event, () => keys.delete(el.dataset.dir)),
   );
 });
+const controllerPages = ["home", "library", "configure", "results", "settings"];
+const controllerUI = window.ControllerUI.create({
+  context: () => ({
+    page,
+    playing,
+    hintAvailable: state.settings.hints && !$("reveal-hint").hidden,
+  }),
+  revealHint: () => {
+    if (!$("reveal-hint").hidden) $("reveal-hint").click();
+  },
+  pause,
+  back: () => {
+    if (page === "game") $("exit").click();
+    else show("home");
+  },
+  cycle: (direction) => {
+    const index = controllerPages.indexOf(page);
+    show(
+      controllerPages[
+        (Math.max(index, 0) + direction + controllerPages.length) %
+          controllerPages.length
+      ],
+    );
+  },
+});
+const overlayActions = node("div", undefined, "controller-dialog-actions");
+const overlayRetry = node("button", "Retry level");
+overlayRetry.id = "overlay-retry";
+overlayRetry.onclick = () => $("restart").click();
+const overlayExit = node("button", "Save & exit");
+overlayExit.id = "overlay-exit";
+overlayExit.onclick = () => $("exit").click();
+overlayActions.append(overlayRetry, overlayExit);
+$("continue").parentElement.append(overlayActions);
 function gamepad() {
   const pad = Array.from(navigator.getGamepads?.() || []).find(
     (p) => p?.connected,
@@ -760,18 +798,8 @@ function gamepad() {
   $("controller").textContent = pad
     ? "Controller connected: " + pad.id
     : "Controller: not detected";
-  if (!pad) {
-    lastPadA = false;
-    lastPadStart = false;
-    return { x: 0, y: 0 };
-  }
-  const a = !!pad.buttons[0]?.pressed,
-    start = !!pad.buttons[9]?.pressed;
-  if (start && !lastPadStart) pause();
-  if (a && !lastPadA && page === "game" && !$("overlay").hidden)
-    $("continue").click();
-  lastPadA = a;
-  lastPadStart = start;
+  controllerUI.update(pad, performance.now());
+  if (!pad || !controllerUI.canDrive()) return { x: 0, y: 0 };
   const movement = G.deadZone(
     pad.axes[0],
     pad.axes[1],
