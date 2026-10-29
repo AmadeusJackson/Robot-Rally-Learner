@@ -1,0 +1,317 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"
+    />
+    <title>Robot Rally Learning</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <aside>
+      <div class="brand">
+        <span class="brand-icon">▣</span>
+        <div>ROBOT RALLY<small>LEARNING LAB</small></div>
+      </div>
+      <nav>
+        <button data-page="home" class="active">⌂ &nbsp; Dashboard</button
+        ><button data-page="library">▤ &nbsp; Presentations</button
+        ><button data-page="configure">⚑ &nbsp; Mission builder</button
+        ><button data-page="results">↗ &nbsp; Performance</button
+        ><button data-page="settings">⚙ &nbsp; Settings</button>
+      </nav>
+      <div class="local">
+        <i></i> Local workspace<small>Your slides stay on this Mac.</small>
+      </div>
+    </aside>
+    <main>
+      <div id="status" role="status" aria-live="polite"></div>
+      <section id="home" class="page">
+        <div class="eyebrow">YOUR LEARNING, IN MOTION</div>
+        <h1>Ready for your next mission?</h1>
+        <p class="lede">
+          Turn presentation content into a hands-on learning adventure.
+        </p>
+        <div class="hero">
+          <div>
+            <span class="tag">POWERED BY YOUR KNOWLEDGE</span>
+            <h2>Study. Steer. Succeed.</h2>
+            <p>
+              Import a deck, review your challenges, and drive your robot toward
+              the right answers.
+            </p>
+            <button class="primary" id="home-import">
+              Import presentation ↗</button
+            ><button id="resume" hidden>Resume mission</button>
+          </div>
+          <div class="robot-art" aria-hidden="true">
+            <div class="antenna"></div>
+            <div class="robot-face">
+              ● &nbsp; ●
+              <div>━━━━</div>
+            </div>
+            <div class="tracks">▰ &nbsp; ▰</div>
+          </div>
+        </div>
+        <div class="stats">
+          <article>
+            <span>Presentations</span><strong id="deck-count">0</strong>
+          </article>
+          <article>
+            <span>Completed rallies</span><strong id="run-count">0</strong>
+          </article>
+          <article>
+            <span>Personal best</span><strong id="best-score">0</strong>
+          </article>
+        </div>
+        <h2>Your path to a great rally</h2>
+        <div class="steps">
+          <article>
+            <b>01 / IMPORT</b>
+            <h3>Bring your material</h3>
+            <p>PowerPoint text, notes, tables, and embedded images.</p>
+          </article>
+          <article>
+            <b>02 / REVIEW</b>
+            <h3>Make it your mission</h3>
+            <p>Choose settings and verify every answer against its source.</p>
+          </article>
+          <article>
+            <b>03 / PLAY</b>
+            <h3>Learn by doing</h3>
+            <p>
+              Use a controller, keyboard, or on-screen directional controls.
+            </p>
+          </article>
+        </div>
+      </section>
+      <section id="library" class="page" hidden>
+        <div class="page-heading">
+          <div>
+            <div class="eyebrow">YOUR SOURCE MATERIAL</div>
+            <h1>Presentation library</h1>
+          </div>
+          <button id="import" class="primary">＋ Import PowerPoint</button>
+        </div>
+        <p>
+          Legacy .ppt requires a local LibreOffice installation. Embedded images
+          are available for visual review; diagrams are not automatically
+          interpreted.
+        </p>
+        <div id="files"></div>
+        <div id="slide-preview"></div>
+      </section>
+      <section id="configure" class="page" hidden>
+        <div class="eyebrow">BUILD A LEARNING RUN</div>
+        <h1>Mission builder</h1>
+        <p>
+          All imported presentations are included. Every question must pass
+          validation and your review before play.
+        </p>
+        <div class="panel form-grid" id="config-form">
+          <label
+            >Generation mode<select id="mode">
+              <option value="offline">Offline · exact-text recall</option>
+              <option value="ollama">Ollama · experimental local AI</option>
+            </select></label
+          ><label
+            >Difficulty<select data-setting="difficulty">
+              <option value="easy">Easy · recall</option>
+              <option value="medium">Medium · application</option>
+              <option value="hard">Hard · synthesis</option>
+              <option value="custom">Custom</option>
+            </select></label
+          ><label
+            >Levels<input
+              data-setting="levelCount"
+              type="number"
+              min="1"
+              max="20" /></label
+          ><label
+            >Questions per level<input
+              data-setting="questionsPerLevel"
+              type="number"
+              min="1"
+              max="10" /></label
+          ><label
+            >Incorrect options<input
+              data-setting="distractors"
+              type="number"
+              min="1"
+              max="5" /></label
+          ><label
+            >Seconds per question (0 = unlimited)<input
+              data-setting="timeLimit"
+              type="number"
+              min="0"
+              max="3600" /></label
+          ><label
+            >Correct reward<input
+              data-setting="reward"
+              type="number"
+              min="1"
+              max="10000" /></label
+          ><label
+            >Incorrect penalty<input
+              data-setting="penalty"
+              type="number"
+              min="0"
+              max="10000" /></label
+          ><label
+            >Combo bonus<input
+              data-setting="comboBonus"
+              type="number"
+              min="0"
+              max="1000" /></label
+          ><label
+            >Robot speed<input
+              data-setting="speed"
+              type="number"
+              min="80"
+              max="600" /></label
+          ><label class="check"
+            ><input data-setting="hints" type="checkbox" /> Show source hints
+            during play</label
+          ><label class="check"
+            ><input data-setting="ordered" type="checkbox" /> Enforce order in
+            sequence challenges</label
+          >
+        </div>
+        <p class="notice">
+          Offline mode tests exact text from slides, not conceptual
+          understanding. AI accuracy has not been evaluated. Source quotations
+          alone cannot prove that a generated inference is correct; review all
+          questions.
+        </p>
+        <button id="generate" class="primary">Generate draft missions →</button
+        ><button id="open-review">Review saved missions</button>
+        <div id="generation-status" role="status"></div>
+        <div id="review" hidden>
+          <h2>Question review</h2>
+          <p>
+            Verify prompts, answers, explanations, and source evidence. You can
+            edit the structured questions below, then validate and approve them.
+          </p>
+          <div id="question-preview"></div>
+          <details>
+            <summary>Edit or author structured questions</summary>
+            <textarea
+              id="level-editor"
+              spellcheck="false"
+              aria-label="Mission JSON"
+            ></textarea>
+          </details>
+          <div class="actions">
+            <button id="validate">Apply edits & validate</button
+            ><label class="check"
+              ><input type="checkbox" id="approved" /> I reviewed all questions
+              and their sources</label
+            ><button id="play" class="primary">Launch rally →</button>
+          </div>
+        </div>
+      </section>
+      <section id="settings" class="page" hidden>
+        <div class="eyebrow">MAKE YOURSELF AT HOME</div>
+        <h1>Settings & controls</h1>
+        <div class="panel form-grid">
+          <label
+            >Local Ollama endpoint<input
+              data-setting="endpoint"
+              type="url" /></label
+          ><label
+            >Available model<select data-setting="model" id="model">
+              <option value="">Refresh to detect models</option>
+            </select></label
+          ><button id="refresh">Detect local models</button
+          ><label
+            >Controller dead zone<input
+              data-setting="deadZone"
+              type="number"
+              min="0"
+              max="0.9"
+              step="0.01"
+          /></label>
+        </div>
+        <p id="model-status"></p>
+        <div class="panel">
+          <h2>Drive your way</h2>
+          <p>
+            Keyboard: WASD or arrow keys. Escape pauses. Xbox: left stick /
+            D-pad to drive, Start to pause, A to continue feedback.
+          </p>
+          <p id="controller">Controller: not detected</p>
+          <p>
+            Click the field before driving. Movement pauses when the app loses
+            focus. On-screen controls support touch and mouse.
+          </p>
+        </div>
+      </section>
+      <section id="game" class="page" hidden>
+        <div class="game-top">
+          <div>
+            <div class="eyebrow" id="mission-position"></div>
+            <h2 id="mission-title"></h2>
+          </div>
+          <div class="score-pill">
+            <span id="score">0</span> pts <small id="combo"></small>
+          </div>
+          <button id="pause">Pause</button
+          ><button id="restart">Retry level</button
+          ><button id="exit">Save & exit</button>
+        </div>
+        <div class="prompt-panel">
+          <span class="tag" id="challenge-type"></span>
+          <h2 id="prompt"></h2>
+          <p id="collect-progress"></p>
+        </div>
+        <div class="field-wrap">
+          <canvas
+            id="field"
+            width="1000"
+            height="600"
+            tabindex="0"
+            aria-label="Robot driving field. Use arrow keys or WASD to collect answers."
+          ></canvas>
+          <div id="overlay" hidden>
+            <div>
+              <span class="tag" id="overlay-tag">MISSION CONTROL</span>
+              <h2 id="overlay-title"></h2>
+              <p id="overlay-message"></p>
+              <button id="continue" class="primary">Continue</button>
+            </div>
+          </div>
+        </div>
+        <div class="game-bottom">
+          <div>
+            <p id="feedback" aria-live="polite">
+              Drive over an answer to collect it.
+            </p>
+            <p id="hint"></p>
+          </div>
+          <div class="touch">
+            <button data-dir="up" aria-label="Drive up">↑</button>
+            <div>
+              <button data-dir="left" aria-label="Drive left">←</button
+              ><button data-dir="down" aria-label="Drive down">↓</button
+              ><button data-dir="right" aria-label="Drive right">→</button>
+            </div>
+          </div>
+        </div>
+        <div id="answer-accessibility"></div>
+      </section>
+      <section id="results" class="page" hidden>
+        <div class="eyebrow">EVERY ATTEMPT IS PROGRESS</div>
+        <h1>Performance</h1>
+        <p>
+          Review missed answers and revisit their evidence before your next run.
+        </p>
+        <div id="results-list"></div>
+      </section>
+    </main>
+    <script src="game-core.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
