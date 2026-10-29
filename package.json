@@ -1,0 +1,63 @@
+{
+  "name": "robot-rally-desktop",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Local PowerPoint-to-robot-learning game",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "test": "node --test test/*.test.js",
+    "dist:mac": "electron-builder --mac dmg --arm64 --x64",
+    "dist:mac:arm64": "electron-builder --mac dmg --arm64",
+    "dist:mac:x64": "electron-builder --mac dmg --x64",
+    "test:e2e": "node --test test/e2e.cjs"
+  },
+  "dependencies": {
+    "adm-zip": "0.6.1",
+    "fast-xml-parser": "5.11.2"
+  },
+  "devDependencies": {
+    "electron": "45.1.0",
+    "electron-builder": "26.18.0",
+    "playwright": "1.64.1"
+  },
+  "build": {
+    "appId": "org.robotrally.learning",
+    "productName": "Robot Rally Learning",
+    "asar": true,
+    "files": [
+      "src/**/*",
+      "package.json"
+    ],
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "artifactName": "${productName}-${version}-${arch}.${ext}",
+    "mac": {
+      "target": "dmg",
+      "icon": "build/icon.icns",
+      "category": "public.app-category.education",
+      "hardenedRuntime": true,
+      "entitlements": "build/entitlements.mac.plist",
+      "entitlementsInherit": "build/entitlements.mac.plist"
+    },
+    "dmg": {
+      "title": "Robot Rally Learning",
+      "contents": [
+        {
+          "x": 150,
+          "y": 170
+        },
+        {
+          "x": 450,
+          "y": 170,
+          "type": "link",
+          "path": "/Applications"
+        }
+      ]
+    }
+  },
+  "author": "Robot Rally Learning",
+  "license": "UNLICENSED"
+}
