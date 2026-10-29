@@ -34,8 +34,6 @@ let state = {
   playing = false,
   keys = new Set(),
   lastTime = 0,
-  lastPadA = false,
-  lastPadStart = false,
   overlayAction = null,
   saveTimer = 0;
 const bot = { x: 500, y: 550, radius: 18, angle: 0 },
@@ -112,19 +110,19 @@ function syncSettings() {
       persist();
     };
   });
-  if (state.settings.model) {
-    const option = node("option", state.settings.model);
-    option.value = state.settings.model;
-    $("model").append(option);
-    $("model").value = state.settings.model;
-  }
 }
 async function importDecks() {
   if (busy) return;
   busy = true;
   report("Importing presentation content…");
   try {
-    const decks = await api.selectPresentations();
+    const paths = await window.PresentationPicker.choose();
+    const decks =
+      paths === null
+        ? await api.selectPresentations()
+        : paths.length
+          ? await api.importPresentationPaths(paths)
+          : [];
     const errors = [];
     for (const deck of decks) {
       if (deck.error) errors.push(deck.name + ": " + deck.error);
@@ -167,11 +165,11 @@ function renderLibrary() {
     const inspect = node("button", "Inspect slides");
     inspect.onclick = () => renderSlides(deck);
     const remove = node("button", "Remove");
-    remove.onclick = () => {
+    remove.onclick = async () => {
       if (
-        !confirm(
+        !(await controllerUI.confirm(
           "Remove this presentation? Missions and saved runs that depend on it will be cleared.",
-        )
+        ))
       )
         return;
       state.decks = state.decks.filter((d) => d.id !== deck.id);
@@ -232,29 +230,37 @@ function renderSlides(deck) {
     out.append(card);
   }
 }
-$("refresh").onclick = async () => {
-  report("");
-  $("model-status").textContent = "Detecting local models…";
+let appleAvailability = { available: false, message: "Checking availability…" };
+async function checkAppleAI(selectDefault = false) {
+  $("refresh-apple").disabled = true;
+  $("apple-status").textContent = "Checking Apple Intelligence availability…";
   try {
-    const result = await api.checkOllama(state.settings.endpoint);
-    $("model").replaceChildren();
-    for (const name of result.models || []) {
-      const option = node("option", name);
-      option.value = name;
-      $("model").append(option);
-    }
-    if (result.models?.includes(state.settings.model))
-      $("model").value = state.settings.model;
-    state.settings.model = $("model").value;
-    persist();
-    $("model-status").textContent = result.available
-      ? result.models.length + " model(s) available."
-      : result.error ||
-        "Ollama is unavailable. Start it locally or choose offline mode.";
-  } catch (e) {
-    $("model-status").textContent = e.message;
+    appleAvailability = await api.checkAppleAI();
+  } catch (error) {
+    appleAvailability = {
+      available: false,
+      reason: "detection_failed",
+      message: error.message,
+    };
   }
-};
+  const result = appleAvailability;
+  const text = result.available
+    ? "Apple Intelligence is available. Questions are generated on this Mac; review them before play."
+    : "Apple Intelligence is unavailable" +
+      (result.reason
+        ? " (" + String(result.reason).replaceAll("_", " ") + ")"
+        : "") +
+      ". " +
+      (result.message ||
+        "This Mac does not currently support on-device generation.") +
+      " Choose Offline · content practice to build questions without AI.";
+  $("apple-status").textContent = text;
+  $("apple-settings-status").textContent = text;
+  $("mode").querySelector('[value="apple"]').disabled = !result.available;
+  if (selectDefault) $("mode").value = result.available ? "apple" : "offline";
+  $("refresh-apple").disabled = false;
+}
+$("refresh-apple").onclick = () => checkAppleAI(true);
 $("generate").onclick = async () => {
   if (busy) return;
   busy = true;
@@ -264,8 +270,8 @@ $("generate").onclick = async () => {
   try {
     if (!state.decks.length) throw Error("Import a presentation first.");
     const payload = { decks: state.decks, settings: state.settings };
-    state.levels = await ($("mode").value === "ollama"
-      ? api.generateOllama(payload)
+    state.levels = await ($("mode").value === "apple"
+      ? api.generateApple(payload)
       : api.generateOffline(payload));
     state.session = null;
     await persist();
@@ -273,8 +279,12 @@ $("generate").onclick = async () => {
     $("generation-status").textContent =
       "Draft ready. Review and approve every question before play.";
   } catch (e) {
-    $("generation-status").textContent = e.message;
-    openAuthor();
+    $("generation-status").textContent =
+      e.message +
+      ($("mode").value === "apple"
+        ? " No replacement questions were generated. Choose Offline · content practice and generate again, or author questions in the editor."
+        : " You can edit or author questions below.");
+    if ($("mode").value !== "apple") openAuthor();
   } finally {
     busy = false;
     $("generate").disabled = false;
@@ -460,8 +470,13 @@ function setupQuestion(resume = false) {
   $("challenge-type").textContent = q.type;
   $("prompt").textContent = q.prompt;
   $("hint").textContent = state.settings.hints
-    ? sourceText(q) + " — " + q.source.quote
+    ? "Source: " + sourceText(q)
     : "";
+  $("reveal-hint").hidden = !state.settings.hints;
+  $("reveal-hint").onclick = () => {
+    $("hint").textContent = sourceText(q) + " — " + q.source.quote;
+    $("reveal-hint").hidden = true;
+  };
   $("feedback").textContent = "Drive over an answer to collect it.";
   $("answer-accessibility").textContent =
     "Options: " + items.map((c) => c.number + ". " + c.text).join(" · ");
@@ -742,6 +757,40 @@ document.querySelectorAll("[data-dir]").forEach((el) => {
     el.addEventListener(event, () => keys.delete(el.dataset.dir)),
   );
 });
+const controllerPages = ["home", "library", "configure", "results", "settings"];
+const controllerUI = window.ControllerUI.create({
+  context: () => ({
+    page,
+    playing,
+    hintAvailable: state.settings.hints && !$("reveal-hint").hidden,
+  }),
+  revealHint: () => {
+    if (!$("reveal-hint").hidden) $("reveal-hint").click();
+  },
+  pause,
+  back: () => {
+    if (page === "game") $("exit").click();
+    else show("home");
+  },
+  cycle: (direction) => {
+    const index = controllerPages.indexOf(page);
+    show(
+      controllerPages[
+        (Math.max(index, 0) + direction + controllerPages.length) %
+          controllerPages.length
+      ],
+    );
+  },
+});
+const overlayActions = node("div", undefined, "controller-dialog-actions");
+const overlayRetry = node("button", "Retry level");
+overlayRetry.id = "overlay-retry";
+overlayRetry.onclick = () => $("restart").click();
+const overlayExit = node("button", "Save & exit");
+overlayExit.id = "overlay-exit";
+overlayExit.onclick = () => $("exit").click();
+overlayActions.append(overlayRetry, overlayExit);
+$("continue").parentElement.append(overlayActions);
 function gamepad() {
   const pad = Array.from(navigator.getGamepads?.() || []).find(
     (p) => p?.connected,
@@ -749,18 +798,8 @@ function gamepad() {
   $("controller").textContent = pad
     ? "Controller connected: " + pad.id
     : "Controller: not detected";
-  if (!pad) {
-    lastPadA = false;
-    lastPadStart = false;
-    return { x: 0, y: 0 };
-  }
-  const a = !!pad.buttons[0]?.pressed,
-    start = !!pad.buttons[9]?.pressed;
-  if (start && !lastPadStart) pause();
-  if (a && !lastPadA && page === "game" && !$("overlay").hidden)
-    $("continue").click();
-  lastPadA = a;
-  lastPadStart = start;
+  controllerUI.update(pad, performance.now());
+  if (!pad || !controllerUI.canDrive()) return { x: 0, y: 0 };
   const movement = G.deadZone(
     pad.axes[0],
     pad.axes[1],
@@ -909,7 +948,22 @@ function validSession(s) {
         ...loaded,
         settings: { ...defaults, ...loaded.settings },
       };
+    if (
+      state.levels.some((level) =>
+        level.questions.some((q) =>
+          /Which exact statement appears on slide/i.test(q.prompt),
+        ),
+      )
+    ) {
+      state.levels = [];
+      state.session = null;
+      await persist();
+      report(
+        "Older slide-location missions were removed. Your presentations, results, and settings are preserved. Generate new content-focused missions in the mission builder.",
+      );
+    }
     syncSettings();
+    await checkAppleAI(true);
     renderHome();
     if (state.session && !validSession(state.session)) {
       state.session = null;

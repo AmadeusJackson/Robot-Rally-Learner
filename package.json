@@ -1,16 +1,17 @@
 {
   "name": "robot-rally-desktop",
-  "version": "1.0.0",
+  "version": "1.2.0",
   "private": true,
   "description": "Local PowerPoint-to-robot-learning game",
   "main": "src/main.js",
   "scripts": {
-    "start": "electron .",
+    "start": "npm run build:apple && electron .",
     "test": "node --test test/*.test.js",
     "dist:mac": "electron-builder --mac dmg --arm64 --x64",
     "dist:mac:arm64": "electron-builder --mac dmg --arm64",
     "dist:mac:x64": "electron-builder --mac dmg --x64",
-    "test:e2e": "node --test test/e2e.cjs"
+    "test:e2e": "node --test --test-concurrency=1 test/e2e.cjs test/controller-e2e.cjs",
+    "build:apple": "node scripts/build-apple-model.cjs"
   },
   "dependencies": {
     "adm-zip": "0.6.1",
@@ -40,7 +41,16 @@
       "category": "public.app-category.education",
       "hardenedRuntime": true,
       "entitlements": "build/entitlements.mac.plist",
-      "entitlementsInherit": "build/entitlements.mac.plist"
+      "entitlementsInherit": "build/entitlements.mac.plist",
+      "extraResources": [
+        {
+          "from": "native-bin/${arch}",
+          "to": "apple-ai",
+          "filter": [
+            "apple-model"
+          ]
+        }
+      ]
     },
     "dmg": {
       "title": "Robot Rally Learning",
@@ -56,7 +66,8 @@
           "path": "/Applications"
         }
       ]
-    }
+    },
+    "beforePack": "scripts/build-apple-model.cjs"
   },
   "author": "Robot Rally Learning",
   "license": "UNLICENSED"

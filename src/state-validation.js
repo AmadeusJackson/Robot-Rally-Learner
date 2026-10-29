@@ -1,6 +1,5 @@
 "use strict";
 const { DEFAULT_SETTINGS, validateLevels } = require("./content");
-const { endpoint } = require("./ollama");
 const record = (value) =>
   value !== null && typeof value === "object" && !Array.isArray(value);
 function decksCheck(decks) {
@@ -78,12 +77,11 @@ function settingsCheck(value = {}) {
   if (
     !["easy", "medium", "hard", "custom"].includes(settings.difficulty) ||
     typeof settings.hints !== "boolean" ||
-    typeof settings.ordered !== "boolean" ||
-    typeof settings.model !== "string" ||
-    settings.model.length > 200
+    typeof settings.ordered !== "boolean"
   )
     throw Error("Invalid game settings.");
-  endpoint(settings.endpoint);
+  delete settings.endpoint;
+  delete settings.model;
   return settings;
 }
 function validateState(state) {

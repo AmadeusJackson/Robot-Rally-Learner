@@ -117,36 +117,6 @@ test("rejects broken explicit slide order instead of silently inventing a replac
   );
   assert.throws(() => parsePptx(zip.toBuffer()), /missing slide relationship/);
 });
-const { endpoint, localFetch } = require("../src/ollama");
-test("Ollama stays local and disallows credentials, paths and redirects", async () => {
-  assert.equal(endpoint("http://localhost:11434"), "http://localhost:11434");
-  for (const value of [
-    "https://example.com",
-    "http://127.0.0.1.evil.com",
-    "http://user:pass@localhost",
-    "http://localhost/admin",
-    "file:///tmp/model",
-  ])
-    assert.throws(() => endpoint(value));
-  const original = global.fetch;
-  try {
-    global.fetch = async (_url, options) => {
-      assert.equal(options.redirect, "error");
-      return new Response("bad", { status: 503 });
-    };
-    await assert.rejects(
-      localFetch("http://localhost:11434", "/api/tags"),
-      /503/,
-    );
-    global.fetch = async () => new Response("invalid JSON");
-    await assert.rejects(
-      localFetch("http://localhost:11434", "/api/tags"),
-      SyntaxError,
-    );
-  } finally {
-    global.fetch = original;
-  }
-});
 const {
   settingsCheck,
   decksCheck,
@@ -158,7 +128,6 @@ test("state settings reject non-finite values and fractional counts", () => {
     { speed: Infinity },
     { levelCount: 1.5 },
     { deadZone: -1 },
-    { endpoint: "http://example.com" },
     null,
     [],
   ])
@@ -213,4 +182,25 @@ test("store validates saved data on restart and preserves the previous file afte
   } finally {
     await fs.rm(dir, { recursive: true, force: true });
   }
+});
+test("extraction marks title-only placeholders but preserves body-slide eligibility", () => {
+  const zip = fixture();
+  zip.updateFile(
+    "ppt/slides/slide1.xml",
+    Buffer.from(
+      '<p:sld xmlns:p="p" xmlns:a="a"><p:cSld><p:spTree><p:sp><p:nvSpPr><p:nvPr><p:ph type="title"/></p:nvPr></p:nvSpPr><p:txBody><a:p><a:r><a:t>Next section</a:t></a:r></a:p></p:txBody></p:sp></p:spTree></p:cSld></p:sld>',
+    ),
+  );
+  let slides = parsePptx(zip.toBuffer());
+  assert.equal(slides[0].isTitleSlide, true);
+  assert.equal(slides[1].isTitleSlide, true);
+  assert.equal(slides[1].title, "Next section");
+  zip.updateFile(
+    "ppt/slides/slide1.xml",
+    Buffer.from(
+      '<p:sld xmlns:p="p" xmlns:a="a"><p:cSld><p:spTree><p:sp><p:nvSpPr><p:nvPr><p:ph type="title"/></p:nvPr></p:nvSpPr><p:txBody><a:p><a:r><a:t>Next section</a:t></a:r></a:p></p:txBody></p:sp><p:sp><p:nvSpPr><p:nvPr><p:ph type="body"/></p:nvPr></p:nvSpPr><p:txBody><a:p><a:r><a:t>Battery is a source of electrical energy.</a:t></a:r></a:p></p:txBody></p:sp></p:spTree></p:cSld></p:sld>',
+    ),
+  );
+  slides = parsePptx(zip.toBuffer());
+  assert.equal(slides[1].isTitleSlide, false);
 });

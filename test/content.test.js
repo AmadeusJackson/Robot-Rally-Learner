@@ -1,25 +1,42 @@
 const { test } = require("node:test");
 const assert = require("node:assert/strict");
-const { generateOffline, validateLevels } = require("../src/content");
+const {
+  generateOffline,
+  validateLevels,
+  getEligibleSlides,
+} = require("../src/content");
 const decks = [
   {
     id: "d",
-    name: "Physics",
+    name: "Robotics",
     slides: [
       {
         number: 1,
-        lines: ["Energy is conserved in an isolated system."],
-        text: "Energy is conserved in an isolated system.",
+        lines: ["Robot systems"],
+        text: "Robot systems",
+        isTitleSlide: true,
       },
       {
         number: 2,
-        lines: ["Velocity has both magnitude and direction."],
-        text: "Velocity has both magnitude and direction.",
+        lines: [
+          "Motor is a device that converts electrical energy into motion.",
+        ],
+        text: "Motor is a device that converts electrical energy into motion.",
       },
       {
         number: 3,
-        lines: ["A force can change the motion of an object."],
-        text: "A force can change the motion of an object.",
+        lines: ["Battery is a source of stored electrical energy."],
+        text: "Battery is a source of stored electrical energy.",
+      },
+      {
+        number: 4,
+        lines: ["Sensor is a component that detects environmental changes."],
+        text: "Sensor is a component that detects environmental changes.",
+      },
+      {
+        number: 5,
+        lines: ["Gear is a toothed wheel that transmits rotation."],
+        text: "Gear is a toothed wheel that transmits rotation.",
       },
     ],
   },
@@ -34,7 +51,14 @@ test("offline produces distinct grounded questions and real source references", 
   const levels = make();
   assert.equal(levels[0].questions.length, 2);
   assert.equal(validateLevels(levels, decks).valid, true);
-  assert.match(levels[0].questions[0].explanation, /not being labeled false/);
+  assert.match(levels[0].questions[0].prompt, /Complete the statement/);
+  assert.equal(levels[0].questions[0].choices[0].text, "Motor");
+  for (const level of levels)
+    for (const q of level.questions) {
+      assert.doesNotMatch(q.prompt, /slide|appears|presentation order/i);
+      assert.ok(q.source.slideNumber > 1);
+      assert.ok(q.source.quote.includes(q.choices[0].text));
+    }
 });
 test("reject duplicate choices even with different casing", () => {
   const l = make();
@@ -87,5 +111,161 @@ test("runtime schema rejects unexpected fields and malformed sources without cra
   assert.equal(
     validateLevels(make(), [null, { id: "d", slides: {} }]).valid,
     false,
+  );
+});
+
+test("exclude opening slides and subsequent title-only slides from all generation sources", () => {
+  const extra = structuredClone(decks);
+  extra[0].slides[0] = {
+    number: 1,
+    lines: ["Title is a heading that must never become a question."],
+    text: "Title is a heading that must never become a question.",
+  };
+  extra[0].slides.push({
+    number: 6,
+    lines: ["Motion systems"],
+    text: "Motion systems",
+    isTitleSlide: true,
+  });
+  extra[0].slides.push({
+    number: 7,
+    lines: ["Electrical systems"],
+    text: "Electrical systems",
+  });
+  assert.deepEqual(
+    getEligibleSlides(extra).map((x) => x.slide.number),
+    [2, 3, 4, 5],
+  );
+  const levels = generateOffline(extra, {
+    levelCount: 1,
+    questionsPerLevel: 4,
+    distractors: 3,
+  });
+  assert.ok(
+    levels[0].questions.every(
+      (q) => q.source.slideNumber > 1 && q.source.slideNumber < 6,
+    ),
+  );
+});
+test("colon definitions generate content matching rather than slide recognition", () => {
+  const deck = {
+    id: "definitions",
+    name: "Terms",
+    slides: [
+      { number: 1, lines: ["Terminology"], text: "Terminology" },
+      ...[
+        "Torque: A turning effect produced by an applied force.",
+        "Voltage: An electrical potential difference between two points.",
+        "Current: A flow of electric charge through a conductor.",
+      ].map((text, i) => ({ number: i + 2, text, lines: [text] })),
+    ],
+  };
+  const q = generateOffline([deck], {
+    levelCount: 1,
+    questionsPerLevel: 1,
+    distractors: 2,
+  })[0].questions[0];
+  assert.equal(q.type, "matching");
+  assert.equal(q.choices[0].text, "Torque");
+  assert.match(q.prompt, /turning effect/);
+  assert.doesNotMatch(q.prompt, /Torque/);
+});
+test("known shared definitions are rejected as ambiguous rather than mislabeled", () => {
+  const deck = {
+    id: "ambiguous",
+    name: "Terms",
+    slides: [
+      { number: 1, lines: ["Title"], text: "Title" },
+      ...[
+        "Speed: Distance traveled per unit of time.",
+        "Rate: Distance traveled per unit of time.",
+      ].map((text, i) => ({ number: i + 2, text, lines: [text] })),
+    ],
+  };
+  assert.throws(
+    () =>
+      generateOffline([deck], {
+        levelCount: 1,
+        questionsPerLevel: 1,
+        distractors: 1,
+      }),
+    /Only 0 content questions/,
+  );
+});
+test("unstructured bullet fragments fail explicitly without slide-location fallback", () => {
+  const deck = {
+    id: "bullets",
+    name: "Bullets",
+    slides: [
+      { number: 1, lines: ["Title"], text: "Title" },
+      {
+        number: 2,
+        lines: ["Energy storage", "Motion control", "Input processing"],
+        text: "Energy storage Motion control Input processing",
+      },
+    ],
+  };
+  assert.throws(
+    () =>
+      generateOffline([deck], {
+        levelCount: 1,
+        questionsPerLevel: 1,
+        distractors: 1,
+      }),
+    /No slide-location questions/,
+  );
+});
+
+test("exclude Key Concepts agenda while retaining adjacent teaching overview", () => {
+  const agenda = [
+    "Cellular Respiration and Fermentation",
+    "Overview of Cellular Respiration",
+    "Glycolysis",
+    "Oxidation/breakdown of Pyruvate",
+    "Citric Acid Cycle",
+    "Oxidative Phosphorylation",
+    "Connections Among Carbohydrate, Protein, and Fat Metabolism",
+    "Anaerobic Respiration and Fermentation",
+    "<number>",
+    "Key Concepts:",
+  ];
+  const overview = [
+    "Overview of Cellular Respiration",
+    "Process by which living cells obtain energy from organic molecules",
+    "Aerobic respiration uses oxygen",
+  ];
+  const slides = [
+    { number: 1, lines: ["Biology"], text: "Biology" },
+    { number: 2, lines: agenda, text: agenda.join("\n"), isTitleSlide: false },
+    {
+      number: 3,
+      lines: overview,
+      text: overview.join("\n"),
+      isTitleSlide: false,
+    },
+    {
+      number: 4,
+      lines: ["Key Concepts:", ...overview],
+      text: overview.join("\n"),
+      isTitleSlide: false,
+    },
+    {
+      number: 5,
+      lines: ["Table of Contents", "Cells", "Membranes", "Transport"],
+      text: "Table of Contents",
+      isTitleSlide: false,
+    },
+    {
+      number: 6,
+      lines: ["Agenda:", "Power systems", "Drive systems"],
+      text: "Agenda",
+      isTitleSlide: false,
+    },
+  ];
+  assert.deepEqual(
+    getEligibleSlides([{ id: "biology", slides }]).map(
+      ({ slide }) => slide.number,
+    ),
+    [3, 4],
   );
 });

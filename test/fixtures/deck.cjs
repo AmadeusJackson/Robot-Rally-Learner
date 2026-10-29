@@ -2,14 +2,14 @@ const AdmZip = require("adm-zip");
 function fixture(file) {
   const z = new AdmZip();
   const statements = [
-    "Energy is conserved in an isolated system.",
-    "Velocity has both magnitude and direction.",
-    "A force can change the motion of an object.",
-    "Friction opposes relative motion between surfaces.",
-    "Mass measures the amount of matter in an object.",
+    "Physics foundations",
+    "Energy is the capacity to do work.",
+    "Velocity is the rate of change of position.",
+    "Force is a push or pull on an object.",
+    "Mass is the amount of matter in an object.",
     "Acceleration is the rate of change of velocity.",
     "Momentum is the product of mass and velocity.",
-    "Gravity attracts objects that have mass.",
+    "Gravity is the attraction between objects with mass.",
   ];
   z.addFile(
     "ppt/presentation.xml",

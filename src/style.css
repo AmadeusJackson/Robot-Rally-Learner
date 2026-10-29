@@ -546,3 +546,36 @@ canvas {
     font-size: 28px;
   }
 }
+
+.presentation-picker {
+  width: min(820px, 90vw);
+  max-height: 85vh;
+  color: #eff6ef;
+  background: #14262d;
+  border: 1px solid #729188;
+  border-radius: 18px;
+  padding: 26px;
+}
+.presentation-picker::backdrop {
+  background: rgb(0 0 0 / 75%);
+}
+.picker-list {
+  display: grid;
+  gap: 8px;
+  max-height: 48vh;
+  overflow: auto;
+  padding: 8px;
+}
+.picker-list button {
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+.picker-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.picker-location {
+  overflow-wrap: anywhere;
+  color: #b8c9cd;
+}
