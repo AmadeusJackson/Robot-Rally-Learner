@@ -63,7 +63,7 @@ Existing slide-location missions are cleared during upgrade so they cannot be re
 The controller works across the dashboard, library, mission builder, review, settings, and game. Connect it to macOS before opening the app, then release all buttons/sticks briefly to enable input.
 
 - D-pad or left stick: move focus through controls. In play, drive the robot.
-- A: select, activate buttons, toggle a checkbox, or expand details. On a text field, open the on-screen keyboard.
+- A: select, activate buttons, toggle a checkbox, or expand details. On a text or number field, open the on-screen keyboard for direct editing.
 - Left/right: decrease/increase a focused number or change a selected option.
 - B: close a dialog or go back; in play, pause. From the pause screen, B saves and exits.
 - LB/RB: switch app screens. Right stick: scroll the current panel.

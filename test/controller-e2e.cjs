@@ -50,7 +50,9 @@ test(
         ipcMain.removeHandler("import-presentation-paths");
         ipcMain.handle("import-presentation-paths", () => [deck]);
       }, deck);
-      await app.evaluate(({BrowserWindow}) => BrowserWindow.getAllWindows()[0].focus());
+      await app.evaluate(({ BrowserWindow }) =>
+        BrowserWindow.getAllWindows()[0].focus(),
+      );
       await page.waitForFunction(() => document.hasFocus());
       await page.evaluate(() => {
         window.testPad = {
@@ -115,6 +117,10 @@ test(
       await press(14);
       await press(14);
       assert.equal(await page.evaluate(() => state.settings.levelCount), 1);
+      await press(0);
+      await page.getByRole("heading", { name: "Enter a number" }).waitFor();
+      await press(1);
+      assert.equal(await page.evaluate(() => state.settings.levelCount), 1);
       await focus('[data-setting="questionsPerLevel"]');
       await press(14);
       await focus("#generate");
@@ -145,10 +151,14 @@ test(
       await page.evaluate(() => (window.testPad.axes[0] = 0));
       await frames();
       await press(3);
-      assert.equal(await page.locator('#reveal-hint').isVisible(), false);
-      await page.evaluate(() => { navigator.getGamepads = () => []; });
+      assert.equal(await page.locator("#reveal-hint").isVisible(), false);
+      await page.evaluate(() => {
+        navigator.getGamepads = () => [];
+      });
       await page.waitForFunction(() => !playing);
-      await page.evaluate(() => { navigator.getGamepads = () => [window.testPad]; });
+      await page.evaluate(() => {
+        navigator.getGamepads = () => [window.testPad];
+      });
       await frames();
       await press(9);
       await page.waitForFunction(() => playing);

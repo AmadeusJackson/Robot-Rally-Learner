@@ -132,7 +132,9 @@
     }
     function keyboard(target) {
       const original = target.value,
-        el = dialog("On-screen keyboard");
+        el = dialog(
+          target.type === "number" ? "Enter a number" : "On-screen keyboard",
+        );
       let upper = false;
       const editor = doc.createElement("textarea");
       editor.className = "controller-keyboard-editor";
@@ -150,7 +152,9 @@
       grid.className = "controller-keyboard-grid";
       el.append(grid);
       const chars =
-        "abcdefghijklmnopqrstuvwxyz0123456789{}[]\":,.-_/?=!+()*;@#$%&\\'<>|`~";
+        target.type === "number"
+          ? "0123456789.-"
+          : "abcdefghijklmnopqrstuvwxyz0123456789{}[]\":,.-_/?=!+()*;@#$%&\\'<>|`~";
       const charButtons = [];
       for (const char of chars) {
         charButtons.push(
@@ -160,15 +164,18 @@
       const row = doc.createElement("div");
       row.className = "controller-keyboard-actions";
       el.append(row);
-      button(row, "Shift: abc", function () {
-        upper = !upper;
-        this.textContent = upper ? "Shift: ABC" : "Shift: abc";
-        charButtons.forEach(
-          (b, i) => (b.textContent = upper ? chars[i].toUpperCase() : chars[i]),
-        );
-      });
-      button(row, "Space", () => edit(" "));
-      button(row, "New line", () => edit("\n"));
+      if (target.type !== "number") {
+        button(row, "Shift: abc", function () {
+          upper = !upper;
+          this.textContent = upper ? "Shift: ABC" : "Shift: abc";
+          charButtons.forEach(
+            (b, i) =>
+              (b.textContent = upper ? chars[i].toUpperCase() : chars[i]),
+          );
+        });
+        button(row, "Space", () => edit(" "));
+        button(row, "New line", () => edit("\n"));
+      }
       button(row, "⌫ Backspace", () => {
         if (editor.selectionStart === editor.selectionEnd)
           editor.selectionStart = Math.max(0, editor.selectionStart - 1);
@@ -219,7 +226,10 @@
         el.value = String(
           Math.max(
             min,
-            Math.min(max, Number(el.value || 0) + step * direction),
+            Math.min(
+              max,
+              Number((Number(el.value || 0) + step * direction).toFixed(8)),
+            ),
           ),
         );
         el.dispatchEvent(new Event("input", { bubbles: true }));
@@ -233,14 +243,7 @@
       if (
         el.tagName === "TEXTAREA" ||
         (el.tagName === "INPUT" &&
-          ![
-            "checkbox",
-            "radio",
-            "button",
-            "submit",
-            "number",
-            "range",
-          ].includes(el.type))
+          !["checkbox", "radio", "button", "submit", "range"].includes(el.type))
       ) {
         if (el.classList.contains("controller-keyboard-editor")) return;
         keyboard(el);
