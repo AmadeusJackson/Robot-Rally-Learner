@@ -579,3 +579,48 @@ canvas {
   overflow-wrap: anywhere;
   color: #b8c9cd;
 }
+
+/* Keep content readable without horizontal scrolling as the window changes. */
+main, .page, .hero > div, .form-grid > *, .game-bottom > div,
+.page-heading > div, .deck header > div, .game-top > div {
+  min-width: 0;
+}
+main { overflow-wrap: anywhere; }
+aside { overflow-y: auto; }
+.page-heading, .actions, .deck header, .game-bottom { flex-wrap: wrap; }
+.deck header { gap: 12px; }
+button { max-width: 100%; white-space: normal; }
+input[type="checkbox"] { flex-shrink: 0; }
+.stats, .steps { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+#slide-preview img { max-width: min(340px, calc(100% - 16px)); height: auto; }
+#slide-preview table { table-layout: fixed; }
+blockquote { margin-right: 0; }
+.field-wrap { margin-inline: auto; width: 100%; }
+canvas { aspect-ratio: 5 / 3; height: auto; }
+#overlay { overflow-y: auto; place-items: safe center; }
+#overlay > div { width: 100%; min-width: 0; }
+.presentation-picker { overflow: auto; }
+
+@media (max-width: 1000px) {
+  .hero { flex-wrap: wrap; }
+  .robot-art { display: none; }
+  .page-heading { align-items: flex-start; }
+}
+@media (max-width: 800px) {
+  .steps { grid-template-columns: 1fr; }
+}
+@media (max-width: 520px) {
+  main { padding: 16px; }
+  .stats { grid-template-columns: 1fr; }
+  .hero, .panel, .deck, .result, .question { padding: 16px; }
+  .game-top { gap: 8px; }
+  .game-top > div:first-child { flex-basis: 100%; }
+  .prompt-panel { padding: 14px; }
+  #overlay > div { padding: 14px; }
+  .presentation-picker { padding: 16px; width: calc(100vw - 24px); }
+}
+@media (max-height: 700px) and (min-width: 801px) {
+  aside { padding-top: 18px; padding-bottom: 70px; }
+  nav { margin-top: 22px; }
+  main { padding-top: 18px; }
+}

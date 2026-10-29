@@ -63,3 +63,20 @@
   font-size: 12px;
   padding: 9px 12px;
 }
+
+.controller-connected main { padding-bottom: calc(var(--controller-legend-height, 60px) + 24px); }
+html { scroll-padding-bottom: calc(var(--controller-legend-height, 0px) + 20px); }
+.controller-dialog, .presentation-picker {
+  max-height: calc(100dvh - var(--controller-legend-height, 0px) - 32px);
+  margin-top: 16px;
+  margin-bottom: calc(var(--controller-legend-height, 0px) + 16px);
+  overflow-wrap: anywhere;
+}
+@media (max-width: 520px) {
+  .controller-dialog { padding: 16px; width: calc(100vw - 24px); }
+  .controller-keyboard-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; }
+  #controller-legend { padding: 8px 12px; }
+}
+@media (min-width: 801px) {
+  .controller-connected aside { padding-bottom: calc(var(--controller-legend-height, 60px) + 20px); }
+}

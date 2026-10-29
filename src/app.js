@@ -62,6 +62,7 @@ function show(name) {
     saveSession();
   }
   page = name;
+  window.scrollTo(0, 0);
   document
     .querySelectorAll(".page")
     .forEach((el) => (el.hidden = el.id !== name));
@@ -986,3 +987,23 @@ function validSession(s) {
   }
   requestAnimationFrame(frame);
 })();
+
+// Preserve the game's coordinate system while fitting the visible playing area.
+// Observe surrounding content too: questions and controller hints can wrap.
+function fitWindow() {
+  const legend = $("controller-legend");
+  const legendHeight = legend ? legend.getBoundingClientRect().height : 0;
+  document.documentElement.style.setProperty("--controller-legend-height", `${legendHeight}px`);
+  if ($("game").hidden) return;
+  const field = canvas.parentElement;
+  const top = field.getBoundingClientRect().top + window.scrollY;
+  const bottom = document.querySelector(".game-bottom").getBoundingClientRect().height;
+  const available = Math.max(240, window.innerHeight - top - bottom - legendHeight - 40);
+  field.style.maxWidth = `${available * 5 / 3}px`;
+}
+const layoutObserver = new ResizeObserver(fitWindow);
+[document.querySelector("main"), document.querySelector(".game-top"),
+ document.querySelector(".prompt-panel"), document.querySelector(".game-bottom"),
+ $("controller-legend")].filter(Boolean).forEach(el => layoutObserver.observe(el));
+window.addEventListener("resize", fitWindow);
+fitWindow();

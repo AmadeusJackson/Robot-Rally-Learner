@@ -74,3 +74,9 @@ Pause and completion screens expose Continue, Retry level, and Save & exit. A di
 Import opens an in-app browser for PowerPoint files in Downloads, Documents, and Desktop. Folders, file selection, cancellation, and removal confirmation work with the controller. The optional Other location button opens the macOS chooser. macOS permission dialogs and that system chooser are outside the app's controller support and may require a mouse or keyboard. Hidden files and links escaping the allowed folders are not listed.
 
 Controller tests simulate standard Gamepad API input; physical Xbox compatibility still depends on macOS pairing/mapping and should be checked on the user's hardware.
+
+## Window sizing
+
+The window can shrink to 480 × 480. Navigation moves above the page in narrow windows; forms, cards, and action rows reflow, and longer pages scroll vertically. The game field preserves its proportions and scales to the space around the question and controls. Very short windows or long questions may still require scrolling. Dialogs and the on-screen keyboard scroll within the window and leave space for the controller legend. Switching screens starts at the top of the page.
+
+`npm run test:e2e` includes layout checks from 480 × 480 through 1920 × 1080, covering page overflow, game proportions, the file picker, and reachable keyboard actions.
