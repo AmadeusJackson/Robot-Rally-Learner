@@ -133,6 +133,17 @@ function validateState(state) {
       !Array.isArray(s.collected)
     )
       throw Error("Invalid saved session.");
+    if (
+      s.levelStart !== undefined &&
+      (!record(s.levelStart) ||
+        !["score", "correct", "incorrect", "mistakeCount"].every((key) =>
+          Number.isFinite(s.levelStart[key]),
+        ) ||
+        !Number.isInteger(s.levelStart.mistakeCount) ||
+        s.levelStart.mistakeCount < 0 ||
+        s.levelStart.mistakeCount > s.mistakes.length)
+    )
+      throw Error("Invalid saved level checkpoint.");
     const correct =
       state.levels[s.levelIndex].questions[s.questionIndex].correctIds;
     if (
