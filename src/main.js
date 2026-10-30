@@ -62,8 +62,8 @@ function createWindow() {
   win = new BrowserWindow({
     width: 1280,
     height: 900,
-    minWidth: 900,
-    minHeight: 650,
+    minWidth: 480,
+    minHeight: 480,
     backgroundColor: "#0b1322",
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),

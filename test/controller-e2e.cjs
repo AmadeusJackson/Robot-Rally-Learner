@@ -6,7 +6,7 @@ const os = require("node:os");
 const path = require("node:path");
 const root = path.resolve(__dirname, "..");
 test(
-  "Xbox inputs operate import, configuration, review, keyboard, gameplay pause and removal without mouse clicks",
+  "Xbox inputs operate import, configuration, review, keyboard, gameplay pause and removal with the macOS chooser mocked",
   { timeout: 120000 },
   async () => {
     const profile = await fs.mkdtemp(
@@ -34,21 +34,8 @@ test(
         ].map((text, i) => ({ number: i + 1, text, lines: [text] })),
       };
       await app.evaluate(({ ipcMain }, deck) => {
-        ipcMain.removeHandler("list-presentation-files");
-        ipcMain.handle("list-presentation-files", () => ({
-          path: "/fixture",
-          parent: null,
-          roots: [],
-          entries: [
-            {
-              name: deck.name,
-              path: "/fixture/lesson.pptx",
-              isDirectory: false,
-            },
-          ],
-        }));
-        ipcMain.removeHandler("import-presentation-paths");
-        ipcMain.handle("import-presentation-paths", () => [deck]);
+        ipcMain.removeHandler("select-presentations");
+        ipcMain.handle("select-presentations", () => [deck]);
       }, deck);
       await app.evaluate(({ BrowserWindow }) =>
         BrowserWindow.getAllWindows()[0].focus(),
@@ -76,6 +63,7 @@ test(
               requestAnimationFrame(() => requestAnimationFrame(r)),
             ),
         );
+      await page.waitForFunction(() => document.body.classList.contains("controller-connected"));
       await frames();
       const press = async (index) => {
         await page.evaluate((i) => {
@@ -103,10 +91,6 @@ test(
       await press(5);
       assert.equal(await page.evaluate(() => page), "library");
       await focus("#import");
-      await press(0);
-      await page.locator("#presentation-picker").waitFor({ state: "visible" });
-      await frames();
-      await focus("#presentation-picker .picker-list button");
       await press(0);
       await page.waitForFunction(() => state.decks.length === 1);
       await press(5);

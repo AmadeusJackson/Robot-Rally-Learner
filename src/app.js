@@ -62,6 +62,7 @@ function show(name) {
     saveSession();
   }
   page = name;
+  window.scrollTo(0, 0);
   document
     .querySelectorAll(".page")
     .forEach((el) => (el.hidden = el.id !== name));
@@ -75,6 +76,7 @@ function show(name) {
 document
   .querySelectorAll("[data-page]")
   .forEach((el) => (el.onclick = () => show(el.dataset.page)));
+$("home-build").onclick = () => show("configure");
 function renderHome() {
   $("deck-count").textContent = state.decks.length;
   $("run-count").textContent = state.results.length;
@@ -82,6 +84,22 @@ function renderHome() {
     ? Math.max(...state.results.map((r) => r.score))
     : 0;
   $("resume").hidden = !state.session;
+  const list = $("home-presentations");
+  list.replaceChildren();
+  if (!state.decks.length) {
+    list.append(node("p", "No presentations yet. Add a PowerPoint to get started.", "empty"));
+  }
+  for (const deck of state.decks.slice(-5).reverse()) {
+    const row = node("button", undefined, "presentation-row");
+    row.append(node("span", deck.name), node("small", `${deck.slides.length} slides`));
+    row.onclick = () => { show("library"); renderSlides(deck); };
+    list.append(row);
+  }
+  if (state.decks.length > 5) {
+    const all = node("button", `View all ${state.decks.length} presentations`);
+    all.onclick = () => show("library");
+    list.append(all);
+  }
 }
 function syncSettings() {
   document.querySelectorAll("[data-setting]").forEach((el) => {
@@ -116,22 +134,22 @@ async function importDecks() {
   busy = true;
   report("Importing presentation content…");
   try {
-    const paths = await window.PresentationPicker.choose();
-    const decks =
-      paths === null
-        ? await api.selectPresentations()
-        : paths.length
-          ? await api.importPresentationPaths(paths)
-          : [];
+    const decks = await api.selectPresentations();
     const errors = [];
+    let added = 0;
     for (const deck of decks) {
       if (deck.error) errors.push(deck.name + ": " + deck.error);
-      else if (!state.decks.some((d) => d.id === deck.id))
+      else if (!state.decks.some((d) => d.id === deck.id)) {
         state.decks.push(deck);
+        added++;
+      }
     }
     await persist();
     show("library");
-    report(errors.join("\n"));
+    report([
+      added ? `Added ${added} presentation${added === 1 ? "" : "s"}. ${state.decks.length} in your library. Choose Generate questions in Build a game to mix their content; existing saved games stay unchanged.` : "",
+      ...errors,
+    ].filter(Boolean).join("\n"));
   } catch (e) {
     report(e.message);
   } finally {
@@ -245,7 +263,7 @@ async function checkAppleAI(selectDefault = false) {
   }
   const result = appleAvailability;
   const text = result.available
-    ? "Apple Intelligence is available. Questions are generated on this Mac; review them before play."
+    ? "Apple Intelligence · Available on this Mac."
     : "Apple Intelligence is unavailable" +
       (result.reason
         ? " (" + String(result.reason).replaceAll("_", " ") + ")"
@@ -266,7 +284,7 @@ $("generate").onclick = async () => {
   busy = true;
   $("generate").disabled = true;
   report("");
-  $("generation-status").textContent = "Building draft missions locally…";
+  $("generation-status").textContent = "Generating questions…";
   try {
     if (!state.decks.length) throw Error("Import a presentation first.");
     const payload = { decks: state.decks, settings: state.settings };
@@ -276,8 +294,11 @@ $("generate").onclick = async () => {
     state.session = null;
     await persist();
     renderReview();
+    const used = new Set(state.levels.flatMap(level => level.questions.map(q => q.source.deckId)));
+    const omitted = state.decks.filter(deck => !used.has(deck.id));
     $("generation-status").textContent =
-      "Draft ready. Review and approve every question before play.";
+      `Draft ready: questions mixed from ${used.size} of ${state.decks.length} presentations. Review and approve every question before play.` +
+      (omitted.length ? ` Not included: ${omitted.map(d => d.name).join(", ")}. Increase the question count or check that these presentations contain usable teaching content.` : "");
   } catch (e) {
     $("generation-status").textContent =
       e.message +
@@ -812,9 +833,9 @@ function gamepad() {
   return movement;
 }
 function draw() {
-  ctx.fillStyle = "#11252d";
+  ctx.fillStyle = "#242627";
   ctx.fillRect(0, 0, 1000, 600);
-  ctx.strokeStyle = "#203943";
+  ctx.strokeStyle = "#303334";
   ctx.lineWidth = 1;
   for (let x = 20; x < 1000; x += 40) {
     ctx.beginPath();
@@ -828,18 +849,18 @@ function draw() {
     ctx.lineTo(1000, y);
     ctx.stroke();
   }
-  ctx.strokeStyle = "#44616b";
+  ctx.strokeStyle = "#626664";
   ctx.strokeRect(8, 8, 984, 584);
   ctx.textAlign = "center";
   for (const item of items) {
     if (!item.active) continue;
-    ctx.fillStyle = "#2a424b";
+    ctx.fillStyle = "#363a3b";
     ctx.beginPath();
     ctx.roundRect(item.x - item.w / 2, item.y - item.h / 2, item.w, item.h, 12);
     ctx.fill();
-    ctx.strokeStyle = "#647d83";
+    ctx.strokeStyle = "#818783";
     ctx.stroke();
-    ctx.fillStyle = "#eff6ef";
+    ctx.fillStyle = "#eeeae2";
     ctx.font = "15px -apple-system, sans-serif";
     const words = (item.number + ". " + item.text).split(/\s+/),
       lines = [""];
@@ -865,7 +886,7 @@ function draw() {
   ctx.fillStyle = "#060e12";
   ctx.fillRect(-24, -21, 10, 42);
   ctx.fillRect(14, -21, 10, 42);
-  ctx.fillStyle = "#c6f576";
+  ctx.fillStyle = "#e9bd77";
   ctx.beginPath();
   ctx.roundRect(-16, -21, 32, 42, 7);
   ctx.fill();
@@ -986,3 +1007,23 @@ function validSession(s) {
   }
   requestAnimationFrame(frame);
 })();
+
+// Preserve the game's coordinate system while fitting the visible playing area.
+// Observe surrounding content too: questions and controller hints can wrap.
+function fitWindow() {
+  const legend = $("controller-legend");
+  const legendHeight = legend ? legend.getBoundingClientRect().height : 0;
+  document.documentElement.style.setProperty("--controller-legend-height", `${legendHeight}px`);
+  if ($("game").hidden) return;
+  const field = canvas.parentElement;
+  const top = field.getBoundingClientRect().top + window.scrollY;
+  const bottom = document.querySelector(".game-bottom").getBoundingClientRect().height;
+  const available = Math.max(240, window.innerHeight - top - bottom - legendHeight - 40);
+  field.style.maxWidth = `${available * 5 / 3}px`;
+}
+const layoutObserver = new ResizeObserver(fitWindow);
+[document.querySelector("main"), document.querySelector(".game-top"),
+ document.querySelector(".prompt-panel"), document.querySelector(".game-bottom"),
+ $("controller-legend")].filter(Boolean).forEach(el => layoutObserver.observe(el));
+window.addEventListener("resize", fitWindow);
+fitWindow();

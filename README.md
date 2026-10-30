@@ -9,7 +9,7 @@ Install the matching macOS DMG by dragging the app to Applications. See [BUILD_M
 1. Import a `.pptx` presentation into the library.
 2. Inspect the extracted slides, notes, tables, and embedded images.
 3. Configure level count, questions, difficulty, scoring, time limits, hints, speed, and controller dead zone.
-4. Generate limited deterministic questions offline, or use Apple Intelligence on a supported Mac.
+4. Generate source-grounded questions offline, or use Apple Intelligence on a supported Mac.
 5. Preview every challenge, its correct answers, and source quotation. Edit the JSON if necessary, validate it, and approve it before playing.
 6. Drive with WASD, arrow keys, a connected standard-mapped Xbox controller, or the on-screen controls. Collect the requested answers and review explanations and mistakes.
 
@@ -60,7 +60,7 @@ Existing slide-location missions are cleared during upgrade so they cannot be re
 
 ## Xbox controller navigation
 
-The controller works across the dashboard, library, mission builder, review, settings, and game. Connect it to macOS before opening the app, then release all buttons/sticks briefly to enable input.
+The controller works across Overview, Presentations, Build a game, question review, Settings, and the game. Connect it to macOS before opening the app, then release all buttons/sticks briefly to enable input.
 
 - D-pad or left stick: move focus through controls. In play, drive the robot.
 - A: select, activate buttons, toggle a checkbox, or expand details. On a text or number field, open the on-screen keyboard for direct editing.
@@ -71,6 +71,22 @@ The controller works across the dashboard, library, mission builder, review, set
 
 Pause and completion screens expose Continue, Retry level, and Save & exit. A disconnected controller or loss of app focus pauses gameplay. Input must return to neutral after reconnecting or switching between menus and driving, preventing held buttons from triggering unintended actions.
 
-Import opens an in-app browser for PowerPoint files in Downloads, Documents, and Desktop. Folders, file selection, cancellation, and removal confirmation work with the controller. The optional Other location button opens the macOS chooser. macOS permission dialogs and that system chooser are outside the app's controller support and may require a mouse or keyboard. Hidden files and links escaping the allowed folders are not listed.
+Add presentations opens the standard macOS file chooser directly. Use Command-click or Shift-click to select multiple PowerPoint files, then choose Open. The app accepts up to 20 files per import. The system chooser and macOS permission prompts may require a mouse or keyboard; the Xbox controller can open the chooser but does not control it.
 
 Controller tests simulate standard Gamepad API input; physical Xbox compatibility still depends on macOS pairing/mapping and should be checked on the user's hardware.
+
+## Window sizing
+
+The window can shrink to 480 × 480. Navigation moves above the page in narrow windows; forms, cards, and action rows reflow, and longer pages scroll vertically. The game field preserves its proportions and scales to the space around the question and controls. Very short windows or long questions may still require scrolling. Dialogs and the on-screen keyboard scroll within the window and leave space for the controller legend. Switching screens starts at the top of the page.
+
+`npm run test:e2e` includes layout checks from 480 × 480 through 1920 × 1080, covering page overflow, game proportions, reachable keyboard actions.
+
+## Mixing presentations
+
+Choose **Add presentations**, select one or more PowerPoint files in the macOS chooser, then choose **Open**. You can import again later to add to the library. Cancel leaves the library unchanged.
+
+Open **Build a game** and choose **Generate questions** after adding presentations. Offline and Apple Intelligence generation shuffle eligible content within each presentation and take turns across presentations, so a larger deck does not crowd out smaller decks. Title and agenda slides remain excluded. Choose at least as many total questions as presentations to allow coverage of each. Sources with no usable questions may be omitted; the draft status lists presentations not represented. Existing saved missions keep their questions until you generate a new draft.
+
+The multi-presentation end-to-end test imports two real PPTX files together, adds a third, verifies mixed sources within levels, and reloads the saved workspace. Apple source mixing is covered with a simulated model provider.
+
+Overview lists your five most recently added presentations and saved progress. Choose a presentation to inspect its slides, or use **Build a game** to configure questions.
