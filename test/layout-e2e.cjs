@@ -18,7 +18,6 @@ test('pages, review, dialogs and game reflow across window sizes', {timeout: 120
     await p.waitForFunction(() => typeof state !== 'undefined');
     await app.evaluate(({dialog}, file) => { dialog.showOpenDialog = async () => ({canceled:false, filePaths:[file]}); }, file);
     await p.locator('#home-import').click();
-    await p.getByRole('button',{name:'Other location (macOS chooser)'}).click();
     await p.waitForFunction(() => state.decks.length === 1);
     await p.locator('[data-page="configure"]').click();
     await p.locator('#mode').selectOption('offline');
@@ -60,12 +59,6 @@ test('pages, review, dialogs and game reflow across window sizes', {timeout: 120
       const ratio = await p.locator('#field').evaluate(e => e.clientWidth / e.clientHeight);
       assert.ok(Math.abs(ratio - 5/3) < .02, 'game keeps its aspect ratio');
       await p.locator('#overlay-exit').click();
-      await p.locator('#home-import').click();
-      await p.locator('dialog[open]').waitFor();
-      await check(`${width} picker`);
-      const bounds = await p.locator('dialog[open]').boundingBox();
-      assert.ok(bounds.y >= 0 && bounds.y + bounds.height <= height, 'dialog stays inside window');
-      await p.getByRole('button',{name:'Cancel · B'}).click();
       await p.evaluate(() => { show('configure'); controllerUI.keyboard(document.querySelector('#level-editor')); });
       await check(`${width} keyboard`);
       await p.getByRole('button',{name:'Done',exact:true}).scrollIntoViewIfNeeded();

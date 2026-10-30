@@ -16,24 +16,21 @@ test('select multiple files, cancel safely, append later, mix and persist decks'
   app=await electron.launch({args:[root],env:{...process.env,ROBOT_RALLY_USER_DATA:path.join(temp,'profile')}});
   const p=await app.firstWindow();
   await p.waitForFunction(()=>typeof state!=='undefined');
-  await app.evaluate(({ipcMain}, files)=>{
-   ipcMain.removeHandler('list-presentation-files');
-   ipcMain.handle('list-presentation-files',()=>({path:'/lessons',parent:null,roots:[],entries:files.map(file=>({name:file.split('/').pop(),path:file,isDirectory:false}))}));
+  await app.evaluate(({dialog}, files)=>{
+   const selections = [[], files.slice(0,2), files.slice(2)];
+   dialog.showOpenDialog = async (_window, options) => {
+    if (!options.properties.includes('multiSelections')) throw Error('Multiple selection must be enabled');
+    const filePaths = selections.shift();
+    return {canceled:!filePaths.length, filePaths};
+   };
   },[a,b,c]);
   await p.locator('#home-import').click();
-  await p.getByRole('button',{name:'▤ Physics.pptx',exact:true}).click();
-  await p.getByRole('button',{name:'Cancel · B'}).click();
+  await p.waitForFunction(()=>!busy);
   assert.equal(await p.evaluate(()=>state.decks.length),0);
   await p.locator('#import').click();
-  await p.getByRole('button',{name:'▤ Physics.pptx',exact:true}).click();
-  await p.getByRole('button',{name:'▤ Biology.pptx',exact:true}).click();
-  assert.equal(await p.locator('#import-selected').textContent(),'Import selected (2)');
-  await p.locator('#import-selected').click();
-  await p.waitForFunction(()=>state.decks.length===2);
+  await p.waitForFunction(()=>state.decks.length===2 && !busy);
   await p.locator('#import').click();
-  await p.getByRole('button',{name:'▤ Chemistry.pptx',exact:true}).click();
-  await p.locator('#import-selected').click();
-  await p.waitForFunction(()=>state.decks.length===3);
+  await p.waitForFunction(()=>state.decks.length===3 && !busy);
   await p.locator('[data-page="configure"]').click();
   await p.locator('#mode').selectOption('offline');
   await p.locator('[data-setting="levelCount"]').fill('2');

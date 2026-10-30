@@ -42,7 +42,6 @@ test(
         });
       }, deck);
       await page.locator("#home-import").click();
-      await page.getByRole("button", {name:"Other location (macOS chooser)"}).click();
       await page.waitForFunction(() =>
         document.querySelector("#files").textContent.includes("Physics.pptx"),
       );

@@ -66,7 +66,7 @@
 
 .controller-connected main { padding-bottom: calc(var(--controller-legend-height, 60px) + 24px); }
 html { scroll-padding-bottom: calc(var(--controller-legend-height, 0px) + 20px); }
-.controller-dialog, .presentation-picker {
+.controller-dialog {
   max-height: calc(100dvh - var(--controller-legend-height, 0px) - 32px);
   margin-top: 16px;
   margin-bottom: calc(var(--controller-legend-height, 0px) + 16px);

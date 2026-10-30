@@ -134,13 +134,7 @@ async function importDecks() {
   busy = true;
   report("Importing presentation content…");
   try {
-    const paths = await window.PresentationPicker.choose();
-    const decks =
-      paths === null
-        ? await api.selectPresentations()
-        : paths.length
-          ? await api.importPresentationPaths(paths)
-          : [];
+    const decks = await api.selectPresentations();
     const errors = [];
     let added = 0;
     for (const deck of decks) {
