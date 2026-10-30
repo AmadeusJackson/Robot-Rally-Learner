@@ -13,89 +13,44 @@
   </head>
   <body>
     <aside>
-      <div class="brand">
-        <span class="brand-icon">▣</span>
-        <div>ROBOT RALLY<small>LEARNING LAB</small></div>
-      </div>
+      <div class="brand">Robot Rally<small>Study with your presentations</small></div>
       <nav>
-        <button data-page="home" class="active">⌂ &nbsp; Dashboard</button
-        ><button data-page="library">▤ &nbsp; Presentations</button
-        ><button data-page="configure">⚑ &nbsp; Mission builder</button
-        ><button data-page="results">↗ &nbsp; Performance</button
-        ><button data-page="settings">⚙ &nbsp; Settings</button>
+        <button data-page="home" class="active">Overview</button
+        ><button data-page="library">Presentations</button
+        ><button data-page="configure">Build a game</button
+        ><button data-page="results">Results</button
+        ><button data-page="settings">Settings</button>
       </nav>
-      <div class="local">
-        <i></i> Local workspace<small>Your slides stay on this Mac.</small>
-      </div>
+      <div class="local">Saved on this Mac</div>
     </aside>
     <main>
       <div id="status" role="status" aria-live="polite"></div>
       <section id="home" class="page">
-        <div class="eyebrow">YOUR LEARNING, IN MOTION</div>
-        <h1>Ready for your next mission?</h1>
-        <p class="lede">
-          Turn presentation content into a hands-on learning adventure.
-        </p>
-        <div class="hero">
-          <div>
-            <span class="tag">POWERED BY YOUR KNOWLEDGE</span>
-            <h2>Study. Steer. Succeed.</h2>
-            <p>
-              Import a deck, review your challenges, and drive your robot toward
-              the right answers.
-            </p>
-            <button class="primary" id="home-import">
-              Import presentation ↗</button
-            ><button id="resume" hidden>Resume mission</button>
-          </div>
-          <div class="robot-art" aria-hidden="true">
-            <div class="antenna"></div>
-            <div class="robot-face">
-              ● &nbsp; ●
-              <div>━━━━</div>
-            </div>
-            <div class="tracks">▰ &nbsp; ▰</div>
-          </div>
+        <div class="page-heading">
+          <div><h1>Overview</h1><p>Your presentations and study progress.</p></div>
+          <button id="resume" hidden>Resume game</button>
         </div>
         <div class="stats">
-          <article>
-            <span>Presentations</span><strong id="deck-count">0</strong>
-          </article>
-          <article>
-            <span>Completed rallies</span><strong id="run-count">0</strong>
-          </article>
-          <article>
-            <span>Personal best</span><strong id="best-score">0</strong>
-          </article>
+          <article><span>Presentations</span><strong id="deck-count">0</strong></article>
+          <article><span>Games completed</span><strong id="run-count">0</strong></article>
+          <article><span>Best score</span><strong id="best-score">0</strong></article>
         </div>
-        <h2>Your path to a great rally</h2>
-        <div class="steps">
-          <article>
-            <b>01 / IMPORT</b>
-            <h3>Bring your material</h3>
-            <p>PowerPoint text, notes, tables, and embedded images.</p>
-          </article>
-          <article>
-            <b>02 / REVIEW</b>
-            <h3>Make it your mission</h3>
-            <p>Choose settings and verify every answer against its source.</p>
-          </article>
-          <article>
-            <b>03 / PLAY</b>
-            <h3>Learn by doing</h3>
-            <p>
-              Use a controller, keyboard, or on-screen directional controls.
-            </p>
-          </article>
+        <div class="page-heading section-heading">
+          <h2>Your presentations</h2>
+          <button id="home-import">Add presentations</button>
+        </div>
+        <div id="home-presentations"></div>
+        <div class="home-next">
+          <div><h2>Start a game</h2><p>Mix questions from your presentations, review them, then play.</p></div>
+          <button class="primary" id="home-build">Build a game</button>
         </div>
       </section>
       <section id="library" class="page" hidden>
         <div class="page-heading">
           <div>
-            <div class="eyebrow">YOUR SOURCE MATERIAL</div>
-            <h1>Presentation library</h1>
+                <h1>Presentation library</h1>
           </div>
-          <button id="import" class="primary">＋ Import PowerPoint</button>
+          <button id="import" class="primary">Add presentations</button>
         </div>
         <p>
           Legacy .ppt requires a local LibreOffice installation. Embedded images
@@ -106,12 +61,10 @@
         <div id="slide-preview"></div>
       </section>
       <section id="configure" class="page" hidden>
-        <div class="eyebrow">BUILD A LEARNING RUN</div>
-        <h1>Mission builder</h1>
+        <h1>Build a game</h1>
         <p>
-          Questions are mixed across imported presentations with usable teaching content. Choose at least as many total questions as presentations to cover each one. Every question must pass
-          validation and your review before play. Title and cover slides are
-          skipped so questions focus on the subject matter.
+          Questions are mixed across presentations. Title slides are skipped.
+          To cover every presentation, choose at least one question per presentation.
         </p>
         <p id="apple-status" role="status">
           Checking Apple Intelligence availability…
@@ -186,14 +139,11 @@
           >
         </div>
         <p class="notice">
-          Offline content practice uses definitions and fill-in-the-blank
-          questions grounded in your slides. It does not ask you to memorize
-          slide locations. Apple Intelligence question accuracy has not been
-          evaluated. Source quotations alone cannot prove that a generated
-          inference is correct; review all questions.
+          Review the questions before playing. AI can make mistakes; a source quotation
+          does not guarantee the answer is correct. Offline mode uses definitions and sentence completion.
         </p>
-        <button id="generate" class="primary">Generate draft missions →</button
-        ><button id="open-review">Review saved missions</button>
+        <button id="generate" class="primary">Generate questions</button
+        ><button id="open-review">Review saved questions</button>
         <div id="generation-status" role="status"></div>
         <div id="review" hidden>
           <h2>Question review</h2>
@@ -203,7 +153,7 @@
           </p>
           <div id="question-preview"></div>
           <details>
-            <summary>Edit or author structured questions</summary>
+            <summary>Edit questions (JSON)</summary>
             <textarea
               id="level-editor"
               spellcheck="false"
@@ -215,12 +165,11 @@
             ><label class="check"
               ><input type="checkbox" id="approved" /> I reviewed all questions
               and their sources</label
-            ><button id="play" class="primary">Launch rally →</button>
+            ><button id="play" class="primary">Start game</button>
           </div>
         </div>
       </section>
       <section id="settings" class="page" hidden>
-        <div class="eyebrow">MAKE YOURSELF AT HOME</div>
         <h1>Settings & controls</h1>
         <div class="panel form-grid">
           <div>
@@ -243,7 +192,7 @@
         </div>
         <p id="apple-settings-status" role="status"></p>
         <div class="panel">
-          <h2>Drive your way</h2>
+          <h2>Controls</h2>
           <p>
             Keyboard: WASD or arrow keys. Escape pauses. Xbox: D-pad / left
             stick to navigate, A to select, B to go back, LB / RB to switch
@@ -287,7 +236,7 @@
           ></canvas>
           <div id="overlay" hidden>
             <div>
-              <span class="tag" id="overlay-tag">MISSION CONTROL</span>
+              <span class="tag" id="overlay-tag">Robot Rally</span>
               <h2 id="overlay-title"></h2>
               <p id="overlay-message"></p>
               <button id="continue" class="primary">Continue</button>
@@ -314,8 +263,7 @@
         <div id="answer-accessibility"></div>
       </section>
       <section id="results" class="page" hidden>
-        <div class="eyebrow">EVERY ATTEMPT IS PROGRESS</div>
-        <h1>Performance</h1>
+        <h1>Results</h1>
         <p>
           Review missed answers and revisit their evidence before your next run.
         </p>

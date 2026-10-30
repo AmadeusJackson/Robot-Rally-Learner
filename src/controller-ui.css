@@ -1,7 +1,7 @@
 .controller-connected .controller-focus {
-  outline: 3px solid #c6f576 !important;
+  outline: 3px solid var(--accent) !important;
   outline-offset: 4px !important;
-  box-shadow: 0 0 0 7px #c6f57624 !important;
+  box-shadow: 0 0 0 7px transparent !important;
 }
 .controller-connected main {
   padding-bottom: 85px;
@@ -12,26 +12,26 @@
   bottom: 0;
   left: 0;
   right: 0;
-  background: #172a23;
-  border-top: 1px solid #789956;
+  background: #222324;
+  border-top: 1px solid var(--line);
   padding: 11px 18px;
   text-align: center;
   font-size: 12px;
-  color: #d6f6b5;
+  color: var(--text);
   pointer-events: none;
 }
 .controller-dialog {
-  background: #17272e;
-  color: #eef4ee;
-  border: 1px solid #648375;
-  border-radius: 16px;
+  background: var(--panel);
+  color: var(--text);
+  border: 1px solid #676865;
+  border-radius: 7px;
   padding: 25px;
   width: min(800px, 92vw);
   max-height: 85vh;
   overflow: auto;
 }
 .controller-dialog::backdrop {
-  background: #061115df;
+  background: #000b;
 }
 .controller-dialog h2 {
   margin-top: 0;
