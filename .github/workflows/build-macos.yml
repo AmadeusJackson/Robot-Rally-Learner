@@ -30,6 +30,7 @@ jobs:
       - run: npm ci
       - run: npm run build:apple
       - run: npm test
+      - run: python3 -B test/local_model_test.py
       - run: npm run test:e2e
       - name: Build DMG
         run: |

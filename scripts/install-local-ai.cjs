@@ -14,10 +14,10 @@ execFileSync(python,['-c',`
 from huggingface_hub import snapshot_download
 import json, pathlib, sys
 base=pathlib.Path(sys.argv[1])
-revision='545dc4251c05440727734bcd94334791f6ab0192'
-snapshot_download('mlx-community/Qwen3-8B-4bit',revision=revision,local_dir=str(base/'model'),allow_patterns=['*.json','*.safetensors','*.txt','*.jinja','LICENSE*','README.md'])
-index=json.loads((base/'model/model.safetensors.index.json').read_text())
-assert all((base/'model'/name).is_file() for name in set(index['weight_map'].values()))
-(base/'ready.json').write_text(json.dumps({'model':'mlx-community/Qwen3-8B-4bit','revision':revision}))
+revision='8b2b98c00a6b4d291155e4890773ca8f769aee53'
+snapshot_download('mlx-community/Qwen3.5-9B-4bit',revision=revision,local_dir=str(base/'model-qwen35'),allow_patterns=['*.json','*.safetensors','*.txt','*.jinja','LICENSE*','README.md'])
+index=json.loads((base/'model-qwen35/model.safetensors.index.json').read_text())
+assert all((base/'model-qwen35'/name).is_file() for name in set(index['weight_map'].values()))
+(base/'qwen35-ready.json').write_text(json.dumps({'model':'mlx-community/Qwen3.5-9B-4bit','revision':revision}))
 `,base],{stdio:'inherit',env:{...process.env,HF_HUB_DISABLE_XET:'1',HF_HUB_DOWNLOAD_TIMEOUT:'120',HF_HUB_ETAG_TIMEOUT:'60'}});
 console.log('Local study AI is ready. Reopen Robot Rally or check availability in Settings.');

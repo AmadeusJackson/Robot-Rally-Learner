@@ -70,16 +70,18 @@ async function generateAppleLevels(decks, settings, provider, onProgress = () =>
         .map(line => line.replace(/<number>/gi, "").split(/[:–—]|\s+(?:is|are|means)\s+/i)[0].trim())
         .filter(term => term.length >= 3 && term.length <= 70 && term.split(/\s+/).length <= 6 &&
           !/copyright|reserved|figure|http|access the/i.test(term)))].slice(0, 40);
+      const contextSlides = provider.directQuestions ? candidates.filter(item => item.deck.id === deck.id && item.slide.number !== slide.number)
+        .sort((a,b) => Math.abs(a.slide.number-slide.number)-Math.abs(b.slide.number-slide.number)).slice(0,4) : [];
       const draft = await provider.generateAppleQuestion({
         text,
+        context: contextSlides.map(item => item.slide.text.slice(0,1500)),
         vocabulary,
         difficulty: settings.difficulty,
         distractors: settings.distractors,
         previousPrompts: questions
           .filter(
             (q) =>
-              q.source.deckId === deck.id &&
-              q.source.slideNumber === slide.number,
+              q.source.deckId === deck.id,
           )
           .map((q) => q.prompt)
           .slice(-6),
@@ -102,7 +104,7 @@ async function generateAppleLevels(decks, settings, provider, onProgress = () =>
       const review = draft.review;
       if (provider.directQuestions && (!review || typeof review.selectedAnswer !== "string" ||
           review.selectedAnswer.trim().toLowerCase() !== String(draft.answer).trim().toLowerCase() || review.hasExactlyOneCorrectAnswer !== true || review.isGrounded !== true ||
-          review.plausibleDistractors !== true || (settings.difficulty !== "easy" && review.requiresReasoning !== true)))
+          (settings.difficulty !== "easy" && review.requiresReasoning !== true)))
         throw Error("Question failed grounding, answer, or difficulty review.");
       if (provider.directQuestions && /_{3,}|fill.in.the.blank|complete (?:this|the) (?:statement|explanation)/i.test(draft.prompt))
         throw Error("AI returned a recall template instead of a conceptual question.");
@@ -125,7 +127,7 @@ async function generateAppleLevels(decks, settings, provider, onProgress = () =>
         explanation: draft.explanation,
         source: {
           deckId: deck.id,
-          slideNumber: slide.number,
+          slideNumber: draft.sourceIndex > 0 ? contextSlides[draft.sourceIndex - 1]?.slide.number : slide.number,
           quote: draft.quote,
         },
       };

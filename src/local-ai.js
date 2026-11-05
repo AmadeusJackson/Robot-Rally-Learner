@@ -5,15 +5,15 @@ const { execFile } = require('node:child_process');
 function createLocalAI(dataDirectory) {
   const base = path.join(dataDirectory, 'local-ai');
   const python = path.join(base, 'runtime', 'bin', 'python');
-  const model = path.join(base, 'model');
+  const model = path.join(base, 'model-qwen35');
   const packaged = process.resourcesPath && path.join(process.resourcesPath, 'local-ai', 'local-model.py');
   const script = packaged && fs.existsSync(packaged) ? packaged : path.join(__dirname,'local-model.py');
   const children = new Set();
   function checkLocalAI() {
     const available = process.platform === 'darwin' && process.arch === 'arm64' &&
-      fs.existsSync(python) && fs.existsSync(path.join(base,'ready.json')) &&
-      fs.existsSync(path.join(model,'config.json')) && fs.existsSync(path.join(model,'model.safetensors'));
-    return { available, message: available ? 'Local study AI · Qwen3 8B · Ready on this Mac.' : 'Local study AI is not installed on this Mac.' };
+      fs.existsSync(python) && fs.existsSync(path.join(base,'qwen35-ready.json')) &&
+      fs.existsSync(path.join(model,'config.json')) && ['model-00001-of-00002.safetensors','model-00002-of-00002.safetensors'].every(file => fs.existsSync(path.join(model,file)));
+    return { available, message: available ? 'Local study AI · Qwen3.5 9B · Ready on this Mac.' : 'Local study AI is not installed on this Mac.' };
   }
   function generateAppleQuestion(request) {
     if (!checkLocalAI().available) return Promise.reject(Error('Local study AI is not installed.'));

@@ -95,8 +95,8 @@ test("approved application prompt survives unchanged instead of becoming a cloze
   const levels = await generateAppleLevels(decks, {...settings, difficulty: "medium"}, provider({prompt}));
   assert.equal(levels[0].questions[0].prompt, prompt);
 });
-test("reject unsupported relations, ambiguous answers, filler choices and recall at medium difficulty", async () => {
-  for (const flag of ["isGrounded", "hasExactlyOneCorrectAnswer", "plausibleDistractors", "requiresReasoning"]) {
+test("reject unsupported relations, ambiguous answers and recall at medium difficulty", async () => {
+  for (const flag of ["isGrounded", "hasExactlyOneCorrectAnswer", "requiresReasoning"]) {
     await assert.rejects(() => generateAppleLevels(decks, {...settings, difficulty:"medium"},
       provider({review:{...review,[flag]:false}})), /review/);
   }
@@ -134,4 +134,26 @@ test("local evidence preserves embedded slide-number markers for exact citation 
  p.generateAppleQuestion=async input=>({...draft,quote:input.text});
  const levels=await generateAppleLevels(ds,settings,p);
  assert.match(levels[0].questions[0].source.quote,/<number>/);
+});
+
+test("local questions receive nearby teaching context from their own presentation only", async () => {
+ const ds=structuredClone(decks);
+ ds[0].slides.push({number:3,text:"Force can produce acceleration.",lines:["Force can produce acceleration."]});
+ ds.push({id:"other",name:"Biology",slides:[{number:1,text:"Other title",lines:["Other title"]}]});
+ const p=provider();
+ p.generateAppleQuestion=async input=>{
+   assert.ok(input.context.join(" ").includes("Acceleration") || input.context.join(" ").includes("Force"));
+   assert.doesNotMatch(input.context.join(" "),/Other title|Physics title/);
+   return {...draft,quote:input.text};
+ };
+ await generateAppleLevels(ds,settings,p);
+});
+
+test("a local answer cites the actual supporting neighboring slide", async () => {
+ const ds=structuredClone(decks);
+ ds[0].slides.push({number:3,text:"Force can produce acceleration.",lines:["Force can produce acceleration."]});
+ const p=provider();p.generateAppleQuestion=async input=>({...draft,quote:input.context[0],sourceIndex:1});
+ const levels=await generateAppleLevels(ds,settings,p);
+ const q=levels[0].questions[0];
+ assert.equal(q.source.quote,ds[0].slides.find(s=>s.number===q.source.slideNumber).text);
 });

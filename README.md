@@ -23,7 +23,7 @@ Apple Intelligence is detected automatically using Apple's Foundation Models fra
 
 Apple Intelligence retains source-backed sentence-completion practice. Tests of richer questions from the built-in model exposed incorrect reasoning that its own review missed, so those experimental questions are not enabled. Use **Local study AI** for application and reasoning questions.
 
-Local study AI writes a question, then a separate model session solves shuffled options without seeing the proposed answer. Application answers may express an inference instead of copying a term. The complete source passage used by the model (up to 1,800 characters) is copied directly into the citation. The independent solver checks the answer against that passage. Medium/Hard candidates must pass checks for reasoning, support, plausible distractors, and a single correct answer. These checks are not a guarantee; human preview remains required. Reasoning modes prefer explanatory slides over diagram labels. Accepted questions are retained in a shorter draft if not enough candidates pass, and the interface reports the shortfall. No accepted questions means an explicit failure.
+Local study AI writes a question, then a separate model session solves shuffled options without seeing the proposed answer. Application answers may express an inference instead of copying a term. The supporting source passage (up to 1,800 characters) is copied directly into the citation. Up to four nearby teaching slides from the same presentation provide context; the answer checker identifies the passage that most directly supports the answer. The independent solver checks every option against the teaching material. It must find one supported answer and reject alternatives as contradicted, rather than merely unstated; unresolved options reject the candidate. Medium/Hard candidates must pass checks for reasoning, support, and a single correct answer. Distractor difficulty is generation guidance rather than a hard acceptance check. Feedback quotes the lesson passage directly rather than presenting a generated rationale as fact. These checks are not a guarantee; human preview remains required. Reasoning modes prefer explanatory slides over diagram labels. Accepted questions are retained in a shorter draft if not enough candidates pass, and the interface reports the shortfall. No accepted questions means an explicit failure.
 
 Existing saved questions are preserved. Select **Local study AI** and Medium or Hard in **Build a game**, then choose **Generate questions**. Driving, collision scoring, and controller behavior are unchanged.
 
@@ -36,6 +36,7 @@ PowerPoint text, speaker notes, tables, and supported embedded raster images are
 ```sh
 npm ci
 npm test
+python3 -B test/local_model_test.py
 npm run test:e2e
 npm run build:apple
 npm run test:e2e
@@ -97,8 +98,8 @@ Overview lists your five most recently added presentations and saved progress. C
 
 ## Local study AI (optional)
 
-On an Apple Silicon Mac with at least 16 GB memory, Qwen3 8B can generate and independently check questions locally through MLX. It is an existing model, not a newly trained model. Install `uv`, then run `npm run setup:local-ai` once. This downloads roughly 4–5 GB of model weights plus a Python runtime into `~/Library/Application Support/robot-rally-desktop/local-ai`. The setup script pins the model revision and major runtime packages. Model weights and Python are not included in the DMG. Other Macs continue to offer Apple Intelligence and offline mode.
+On an Apple Silicon Mac with at least 16 GB memory, Qwen3.5 9B can generate and independently check questions locally through MLX. It is an existing model, not a newly trained model. Install `uv`, then run `npm run setup:local-ai` once. This downloads roughly 6 GB of model weights plus a Python runtime into `~/Library/Application Support/robot-rally-desktop/local-ai`. The setup script pins the model revision and major runtime packages. Model weights and Python are not included in the DMG. Other Macs continue to offer Apple Intelligence and offline mode.
 
-When installed, **Local study AI · Qwen3 8B** is selected by default; Apple Intelligence remains selectable. Generation runs in a subprocess with Hugging Face offline mode enabled and no web server. Slides are not uploaded. The subprocess exits after each question; quitting the app stops any active local generation. Both models can make mistakes, and preview/approval remains required. Local generation shows accepted-question progress and may return a shorter draft if candidates fail checks.
+When installed, **Local study AI · Qwen3.5 9B** is selected by default; Apple Intelligence remains selectable. Generation runs in a subprocess with Hugging Face offline mode enabled and no web server. Slides are not uploaded. The subprocess exits after each question; quitting the app stops any active local generation. Both models can make mistakes, and preview/approval remains required. Local generation shows accepted-question progress and may return a shorter draft if candidates fail checks.
 
-Model: https://huggingface.co/mlx-community/Qwen3-8B-4bit (Apache-2.0). Runtime: https://github.com/ml-explore/mlx-lm (MIT).
+Model: https://huggingface.co/mlx-community/Qwen3.5-9B-4bit (Apache-2.0). Runtime: https://github.com/ml-explore/mlx-lm (MIT).
