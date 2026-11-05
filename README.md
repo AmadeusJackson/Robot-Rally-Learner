@@ -9,7 +9,7 @@ Install the matching macOS DMG by dragging the app to Applications. See [BUILD_M
 1. Import a `.pptx` presentation into the library.
 2. Inspect the extracted slides, notes, tables, and embedded images.
 3. Configure level count, questions, difficulty, scoring, time limits, hints, speed, and controller dead zone.
-4. Generate source-grounded questions offline, or use Apple Intelligence on a supported Mac.
+4. Generate source-grounded questions with Local study AI, Apple Intelligence, or offline practice.
 5. Preview every challenge, its correct answers, and source quotation. Edit the JSON if necessary, validate it, and approve it before playing.
 6. Drive with WASD, arrow keys, a connected standard-mapped Xbox controller, or the on-screen controls. Collect the requested answers and review explanations and mistakes.
 
@@ -19,11 +19,15 @@ Settings, imported content, levels, results, and the resumable session are store
 
 Offline content practice creates term-definition matching and factual sentence-completion questions from slide text. It skips the opening slide and identified title-only slides, and never asks which slide contained a statement. It does not infer cause and effect or interpret diagrams. It may reject a deck with insufficient usable or distinct text; it does not silently invent questions.
 
-Apple Intelligence is detected automatically using Apple's Foundation Models framework. On Apple Silicon Macs running macOS 26 or later (including macOS 27), the app checks whether Apple Intelligence is enabled and its model is ready. When available, it is selected automatically. No Ollama installation, cloud account, API key, or terminal setup is needed. Unsupported Macs can explicitly choose offline content practice. Model download/readiness is managed by macOS. The app reports unavailable reasons and never silently substitutes offline questions after an AI failure.
+Apple Intelligence is detected automatically using Apple's Foundation Models framework. On Apple Silicon Macs running macOS 26 or later (including macOS 27), the app checks whether Apple Intelligence is enabled and its model is ready. When available, it is selected automatically unless Local study AI is installed. No Ollama installation, cloud account, API key, or terminal setup is needed. Unsupported Macs can explicitly choose offline content practice. Model download/readiness is managed by macOS. The app reports unavailable reasons and never silently substitutes offline questions after an AI failure.
 
-Apple generation processes teaching slides individually and skips title and agenda slides. It selects concepts and short answers; playable questions blank out the selected term in a verified explanation from the lesson, so an invented question relationship cannot change what is being tested. Generated answers must include an exact source quotation and pass validation before preview. A human must still review answer labels and explanations: a few successful test questions do not establish general AI accuracy.
+Apple Intelligence retains source-backed sentence-completion practice. Tests of richer questions from the built-in model exposed incorrect reasoning that its own review missed, so those experimental questions are not enabled. Use **Local study AI** for application and reasoning questions.
 
-Challenge data supports concept identification, ordered assembly, cause-and-effect chains, matching, identifying incorrect statements, and troubleshooting. These modes share the answer-collection mechanic. Model or manually authored content determines the educational quality and conceptual difficulty. Difficulty is guidance for AI generation; deterministic mode remains limited recall.
+Local study AI writes a question, then a separate model session solves shuffled options without seeing the proposed answer. Application answers may express an inference instead of copying a term. The complete source passage used by the model (up to 1,800 characters) is copied directly into the citation. The independent solver checks the answer against that passage. Medium/Hard candidates must pass checks for reasoning, support, plausible distractors, and a single correct answer. These checks are not a guarantee; human preview remains required. Reasoning modes prefer explanatory slides over diagram labels. Accepted questions are retained in a shorter draft if not enough candidates pass, and the interface reports the shortfall. No accepted questions means an explicit failure.
+
+Existing saved questions are preserved. Select **Local study AI** and Medium or Hard in **Build a game**, then choose **Generate questions**. Driving, collision scoring, and controller behavior are unchanged.
+
+Challenge data supports concept identification, application and prediction, ordered assembly, cause-and-effect chains, matching, identifying incorrect statements, and troubleshooting. These modes share the answer-collection mechanic. Model or manually authored content determines the educational quality and conceptual difficulty. Difficulty is guidance for AI generation; deterministic mode remains limited recall.
 
 PowerPoint text, speaker notes, tables, and supported embedded raster images are extracted locally. Images are available for human review; automatic OCR or visual reasoning over image-only slides is not provided. Legacy `.ppt` requires a separately installed LibreOffice application at `/Applications/LibreOffice.app` to convert it locally. If conversion is unavailable, save the presentation as `.pptx` in PowerPoint or LibreOffice first. LibreOffice is not bundled in the DMG.
 
@@ -85,8 +89,16 @@ The window can shrink to 480 × 480. Navigation moves above the page in narrow w
 
 Choose **Add presentations**, select one or more PowerPoint files in the macOS chooser, then choose **Open**. You can import again later to add to the library. Cancel leaves the library unchanged.
 
-Open **Build a game** and choose **Generate questions** after adding presentations. Offline and Apple Intelligence generation shuffle eligible content within each presentation and take turns across presentations, so a larger deck does not crowd out smaller decks. Title and agenda slides remain excluded. Choose at least as many total questions as presentations to allow coverage of each. Sources with no usable questions may be omitted; the draft status lists presentations not represented. Existing saved missions keep their questions until you generate a new draft.
+Open **Build a game** and choose **Generate questions** after adding presentations. All generation modes shuffle eligible content within each presentation and take turns across presentations, so a larger deck does not crowd out smaller decks. Title and agenda slides remain excluded. Choose at least as many total questions as presentations to allow coverage of each. Sources with no usable questions may be omitted; the draft status lists presentations not represented. Existing saved missions keep their questions until you generate a new draft.
 
 The multi-presentation end-to-end test imports two real PPTX files together, adds a third, verifies mixed sources within levels, and reloads the saved workspace. Apple source mixing is covered with a simulated model provider.
 
 Overview lists your five most recently added presentations and saved progress. Choose a presentation to inspect its slides, or use **Build a game** to configure questions.
+
+## Local study AI (optional)
+
+On an Apple Silicon Mac with at least 16 GB memory, Qwen3 8B can generate and independently check questions locally through MLX. It is an existing model, not a newly trained model. Install `uv`, then run `npm run setup:local-ai` once. This downloads roughly 4–5 GB of model weights plus a Python runtime into `~/Library/Application Support/robot-rally-desktop/local-ai`. The setup script pins the model revision and major runtime packages. Model weights and Python are not included in the DMG. Other Macs continue to offer Apple Intelligence and offline mode.
+
+When installed, **Local study AI · Qwen3 8B** is selected by default; Apple Intelligence remains selectable. Generation runs in a subprocess with Hugging Face offline mode enabled and no web server. Slides are not uploaded. The subprocess exits after each question; quitting the app stops any active local generation. Both models can make mistakes, and preview/approval remains required. Local generation shows accepted-question progress and may return a shorter draft if candidates fail checks.
+
+Model: https://huggingface.co/mlx-community/Qwen3-8B-4bit (Apache-2.0). Runtime: https://github.com/ml-explore/mlx-lm (MIT).

@@ -18,6 +18,7 @@ const DEFAULT_SETTINGS = Object.freeze({
 });
 const TYPES = [
   "concept",
+  "application",
   "ordered",
   "cause-effect",
   "matching",
@@ -191,7 +192,7 @@ function validateLevels(levels, decks) {
         continue;
       }
       if (
-        ["concept", "matching", "incorrect", "troubleshooting"].includes(
+        ["concept", "application", "matching", "incorrect", "troubleshooting"].includes(
           q.type,
         ) &&
         q.correctIds.length !== 1
@@ -237,7 +238,7 @@ function validateLevels(levels, decks) {
       if (!corpus.includes(normalize(source.quote)))
         fail(at, "Evidence quote is absent from the cited slide");
       // Extractive answers provide a mechanical grounding check; semantic relations still require review.
-      if (q.type !== "incorrect")
+      if (!["incorrect", "application"].includes(q.type))
         for (const id of q.correctIds) {
           if (
             !normalize(source.quote).includes(normalize(choices.get(id).text))

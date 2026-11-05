@@ -261,6 +261,7 @@ async function checkAppleAI(selectDefault = false) {
       message: error.message,
     };
   }
+  const local = await api.checkLocalAI().catch(() => ({available:false}));
   const result = appleAvailability;
   const text = result.available
     ? "Apple Intelligence · Available on this Mac."
@@ -272,13 +273,17 @@ async function checkAppleAI(selectDefault = false) {
       (result.message ||
         "This Mac does not currently support on-device generation.") +
       " Choose Offline · content practice to build questions without AI.";
-  $("apple-status").textContent = text;
-  $("apple-settings-status").textContent = text;
+  $("apple-status").textContent = local.available ? local.message + (result.available ? " Apple Intelligence is also available." : "") : text;
+  $("apple-settings-status").textContent = local.available ? local.message + " " + text : text;
   $("mode").querySelector('[value="apple"]').disabled = !result.available;
-  if (selectDefault) $("mode").value = result.available ? "apple" : "offline";
+  $("mode").querySelector('[value="local"]').disabled = !local.available;
+  if (selectDefault) $("mode").value = local.available ? "local" : result.available ? "apple" : "offline";
   $("refresh-apple").disabled = false;
 }
 $("refresh-apple").onclick = () => checkAppleAI(true);
+api.onGenerationProgress(({accepted,total,attempt}) => {
+  if (busy) $("generation-status").textContent = `Writing and checking questions: ${accepted} of ${total} accepted. Working on candidate ${attempt}…`;
+});
 $("generate").onclick = async () => {
   if (busy) return;
   busy = true;
@@ -288,24 +293,27 @@ $("generate").onclick = async () => {
   try {
     if (!state.decks.length) throw Error("Import a presentation first.");
     const payload = { decks: state.decks, settings: state.settings };
-    state.levels = await ($("mode").value === "apple"
+    state.levels = await ($("mode").value === "local" ? api.generateLocal(payload) : $("mode").value === "apple"
       ? api.generateApple(payload)
       : api.generateOffline(payload));
     state.session = null;
     await persist();
     renderReview();
+    const actualCount = state.levels.reduce((n, level) => n + level.questions.length, 0);
+    const requestedCount = state.settings.levelCount * state.settings.questionsPerLevel;
     const used = new Set(state.levels.flatMap(level => level.questions.map(q => q.source.deckId)));
     const omitted = state.decks.filter(deck => !used.has(deck.id));
     $("generation-status").textContent =
       `Draft ready: questions mixed from ${used.size} of ${state.decks.length} presentations. Review and approve every question before play.` +
+      (actualCount < requestedCount ? ` ${actualCount} of ${requestedCount} requested questions passed the checks. The final level may be shorter; add more teaching material or try again for more questions.` : "") +
       (omitted.length ? ` Not included: ${omitted.map(d => d.name).join(", ")}. Increase the question count or check that these presentations contain usable teaching content.` : "");
   } catch (e) {
     $("generation-status").textContent =
       e.message +
-      ($("mode").value === "apple"
+      ($("mode").value !== "offline"
         ? " No replacement questions were generated. Choose Offline · content practice and generate again, or author questions in the editor."
         : " You can edit or author questions below.");
-    if ($("mode").value !== "apple") openAuthor();
+    if ($("mode").value === "offline") openAuthor();
   } finally {
     busy = false;
     $("generate").disabled = false;
