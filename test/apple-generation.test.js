@@ -16,7 +16,9 @@ const decks = [
   },
 ];
 const settings = { levelCount: 1, questionsPerLevel: 1, distractors: 1 };
+const review = { selectedAnswer: "Acceleration", hasExactlyOneCorrectAnswer: true, isGrounded: true, plausibleDistractors: true, requiresReasoning: true };
 const draft = {
+  review,
   prompt: "Which quantity is the rate of change of velocity?",
   answer: "Acceleration",
   distractors: ["Mass"],
@@ -25,6 +27,7 @@ const draft = {
 };
 function provider(change = {}) {
   return {
+    directQuestions: true,
     checkAppleAI: async () => ({ available: true }),
     generateAppleQuestion: async () => ({ ...draft, ...change }),
   };
@@ -87,16 +90,70 @@ test("Apple response rejects duplicate or missing choices", async () => {
     /requested answer options/,
   );
 });
-test("playable prompt is anchored to the quote rather than a model-invented relationship", async () => {
-  const levels = await generateAppleLevels(
-    decks,
-    settings,
-    provider({
-      prompt: "Which pathway immediately follows pyruvate oxidation?",
-    }),
-  );
-  assert.equal(
-    levels[0].questions[0].prompt,
-    "Complete this explanation with the term taught in the lesson: “_____ is the rate of change of velocity.”",
-  );
+test("approved application prompt survives unchanged instead of becoming a cloze", async () => {
+  const prompt = "A cart changes velocity each second. Which quantity describes that change?";
+  const levels = await generateAppleLevels(decks, {...settings, difficulty: "medium"}, provider({prompt}));
+  assert.equal(levels[0].questions[0].prompt, prompt);
+});
+test("reject unsupported relations, ambiguous answers and recall at medium difficulty", async () => {
+  for (const flag of ["isGrounded", "hasExactlyOneCorrectAnswer", "requiresReasoning"]) {
+    await assert.rejects(() => generateAppleLevels(decks, {...settings, difficulty:"medium"},
+      provider({review:{...review,[flag]:false}})), /review/);
+  }
+  await assert.rejects(() => generateAppleLevels(decks, settings, provider({review:undefined})), /review/);
+  await assert.rejects(() => generateAppleLevels(decks, settings, provider({review:{...review,selectedAnswer:"Mass"}})), /review/);
+  await assert.rejects(() => generateAppleLevels(decks, settings, provider({prompt:"Complete the statement: _____ changes velocity."})), /recall template/);
+});
+test("easy allows conceptual recall while hard requires reasoning", async () => {
+  const p = provider({review:{...review,requiresReasoning:false}});
+  assert.equal((await generateAppleLevels(decks, {...settings,difficulty:"easy"},p)).length,1);
+  await assert.rejects(() => generateAppleLevels(decks, {...settings,difficulty:"hard"},p), /review/);
+});
+
+test("keep accepted questions in a shorter draft when later candidates fail", async () => {
+  let calls = 0;
+  const p = provider();
+  p.generateAppleQuestion = async () => { if(calls++ === 0) return draft; throw Error("weak question"); };
+  const levels = await generateAppleLevels(decks, {...settings,questionsPerLevel:2}, p);
+  assert.equal(levels.length,1);
+  assert.equal(levels[0].questions.length,1);
+  assert.equal(levels[0].questions[0].prompt,draft.prompt);
+});
+
+test("Apple fallback retains source sentence practice", async () => {
+ const p=provider();p.directQuestions=false;
+ const levels=await generateAppleLevels(decks,settings,p);
+ assert.match(levels[0].questions[0].prompt,/Complete this explanation/);
+});
+
+test("local evidence preserves embedded slide-number markers for exact citation validation", async () => {
+ const ds=structuredClone(decks);
+ ds[0].slides[1].text="Acceleration changes velocity. <number> Force produces acceleration.";
+ ds[0].slides[1].lines=[ds[0].slides[1].text];
+ const p=provider();
+ p.generateAppleQuestion=async input=>({...draft,quote:input.text});
+ const levels=await generateAppleLevels(ds,settings,p);
+ assert.match(levels[0].questions[0].source.quote,/<number>/);
+});
+
+test("local questions receive nearby teaching context from their own presentation only", async () => {
+ const ds=structuredClone(decks);
+ ds[0].slides.push({number:3,text:"Force can produce acceleration.",lines:["Force can produce acceleration."]});
+ ds.push({id:"other",name:"Biology",slides:[{number:1,text:"Other title",lines:["Other title"]}]});
+ const p=provider();
+ p.generateAppleQuestion=async input=>{
+   assert.ok(input.context.join(" ").includes("Acceleration") || input.context.join(" ").includes("Force"));
+   assert.doesNotMatch(input.context.join(" "),/Other title|Physics title/);
+   return {...draft,quote:input.text};
+ };
+ await generateAppleLevels(ds,settings,p);
+});
+
+test("a local answer cites the actual supporting neighboring slide", async () => {
+ const ds=structuredClone(decks);
+ ds[0].slides.push({number:3,text:"Force can produce acceleration.",lines:["Force can produce acceleration."]});
+ const p=provider();p.generateAppleQuestion=async input=>({...draft,quote:input.context[0],sourceIndex:1});
+ const levels=await generateAppleLevels(ds,settings,p);
+ const q=levels[0].questions[0];
+ assert.equal(q.source.quote,ds[0].slides.find(s=>s.number===q.source.slideNumber).text);
 });

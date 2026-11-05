@@ -269,3 +269,18 @@ test("exclude Key Concepts agenda while retaining adjacent teaching overview", (
     [3, 4],
   );
 });
+
+test("application answers may express an inference but still require exact source evidence and one answer", () => {
+  const levels = make();
+  const q = levels[0].questions[0];
+  q.type = "application";
+  q.choices[0].text = "Motion would stop";
+  assert.equal(validateLevels(levels,decks).valid,true);
+  q.source.quote = "A quotation the author invented.";
+  assert.equal(validateLevels(levels,decks).valid,false);
+  q.source.quote = decks[0].slides.find(s=>s.number===q.source.slideNumber).text;
+  q.correctIds.push(q.choices[1].id);
+  assert.equal(validateLevels(levels,decks).valid,false);
+  q.correctIds.pop();q.type="concept";
+  assert.equal(validateLevels(levels,decks).valid,false);
+});

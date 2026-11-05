@@ -7,7 +7,7 @@ const { Worker } = require("node:worker_threads");
 const { createStore } = require("./persistence");
 const content = require("./content");
 const fileAccess = require("./file-access").createFileAccess();
-let win, store;
+let win, store, localAI;
 const indexURL = pathToFileURL(path.join(__dirname, "index.html")).href;
 if (process.env.ROBOT_RALLY_USER_DATA)
   app.setPath("userData", process.env.ROBOT_RALLY_USER_DATA);
@@ -80,6 +80,7 @@ function createWindow() {
   win.loadURL(indexURL);
 }
 app.whenReady().then(() => {
+  localAI = require("./local-ai").createLocalAI(app.getPath("userData"));
   store = createStore(
     app.getPath("userData"),
     content.DEFAULT_SETTINGS,
@@ -150,6 +151,7 @@ app.whenReady().then(() => {
     }
   });
   handle("check-apple-ai", () => appleAI.checkAppleAI());
+  handle("check-local-ai", () => localAI.checkLocalAI());
   handle("validate-levels", ({ levels, decks }) => {
     decksCheck(decks);
     return content.validateLevels(levels, decks);
@@ -168,6 +170,14 @@ app.whenReady().then(() => {
       generating = false;
     }
   });
+  handle("generate-local", async ({decks,settings}) => {
+    if (generating) throw Error("Generation is already in progress.");
+    generating = true;
+    try { return await generateAppleLevels(decks,settings,localAI, progress => {
+      if (win && !win.isDestroyed()) win.webContents.send("generation-progress",progress);
+    }); }
+    finally { generating = false; }
+  });
   createWindow();
   app.on("activate", () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
@@ -176,3 +186,5 @@ app.whenReady().then(() => {
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin") app.quit();
 });
+
+app.on("before-quit", () => localAI?.dispose());

@@ -72,14 +72,15 @@
         <div class="panel form-grid" id="config-form">
           <label
             >Generation mode<select id="mode">
-              <option value="apple">Apple Intelligence · on-device AI</option>
+              <option value="local">Local study AI · Qwen3.5 9B</option>
+              <option value="apple">Apple Intelligence · simple practice</option>
               <option value="offline">Offline · content practice</option>
             </select></label
           ><label
             >Difficulty<select data-setting="difficulty">
-              <option value="easy">Easy · recall</option>
-              <option value="medium">Medium · application</option>
-              <option value="hard">Hard · synthesis</option>
+              <option value="easy">Easy · understanding</option>
+              <option value="medium">Medium · apply a concept</option>
+              <option value="hard">Hard · experiments & reasoning</option>
               <option value="custom">Custom</option>
             </select></label
           ><label
@@ -139,7 +140,7 @@
           >
         </div>
         <p class="notice">
-          Review the questions before playing. AI can make mistakes; a source quotation
+          For reasoning questions, use Local study AI with Medium or Hard difficulty. Apple Intelligence and offline mode use simpler practice questions. Review the questions before playing. AI can make mistakes; a source quotation
           does not guarantee the answer is correct. Offline mode uses definitions and sentence completion.
         </p>
         <button id="generate" class="primary">Generate questions</button
@@ -173,11 +174,9 @@
         <h1>Settings & controls</h1>
         <div class="panel form-grid">
           <div>
-            <h2>Apple Intelligence</h2>
+            <h2>Question generation</h2>
             <p>
-              Question generation uses the on-device model when it is available
-              on this Mac. No model download or endpoint configuration is
-              required in this app.
+              Local study AI uses Qwen3.5 9B when installed. Apple Intelligence is also available on supported Macs. Both run on this Mac; review generated questions before playing.
             </p>
             <button id="refresh-apple">Check availability again</button>
           </div>

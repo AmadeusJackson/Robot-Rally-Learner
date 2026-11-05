@@ -26,8 +26,9 @@ test('offline mixes decks within levels and covers each usable deck in short run
 });
 test('Apple samples both decks before exhausting the first and retains source evidence',async()=>{
  const levels=await generateAppleLevels(decks,{levelCount:1,questionsPerLevel:2,distractors:1},{
+  directQuestions:true,
   checkAppleAI:async()=>({available:true}),
-  generateAppleQuestion:async ({text})=>({prompt:'What is '+text.split(' ')[0]+'?',answer:text.split(' ')[0],quote:text,explanation:text,distractors:['Temperature']})
+  generateAppleQuestion:async ({text})=>({review:{selectedAnswer:text.split(" ")[0],hasExactlyOneCorrectAnswer:true,isGrounded:true,plausibleDistractors:true,requiresReasoning:true},prompt:'What is '+text.split(' ')[0]+'?',answer:text.split(' ')[0],quote:text,explanation:text,distractors:['Temperature']})
  });
  assert.equal(new Set(levels[0].questions.map(q=>q.source.deckId)).size,2);
  assert.equal(validateLevels(levels,decks).valid,true);
