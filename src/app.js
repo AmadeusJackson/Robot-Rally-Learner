@@ -1051,13 +1051,16 @@ function fitWindow() {
   if ($("game").hidden) return;
   const field = canvas.parentElement;
   const top = field.getBoundingClientRect().top + window.scrollY;
-  const bottom = document.querySelector(".game-bottom").getBoundingClientRect().height;
+  // Reserve room for the controls. Answer explanations can flow down the page.
+  const controls = document.querySelector(".game-bottom .touch");
+  const bottom = controls.getBoundingClientRect().height +
+    parseFloat(getComputedStyle(controls.parentElement).paddingTop);
   const available = Math.max(240, window.innerHeight - top - bottom - legendHeight - 40);
   field.style.maxWidth = `${available * 5 / 3}px`;
 }
 const layoutObserver = new ResizeObserver(fitWindow);
 [document.querySelector("main"), document.querySelector(".game-top"),
- document.querySelector(".prompt-panel"), document.querySelector(".game-bottom"),
+ document.querySelector(".prompt-panel"), document.querySelector(".game-bottom .touch"),
  $("controller-legend")].filter(Boolean).forEach(el => layoutObserver.observe(el));
 window.addEventListener("resize", fitWindow);
 fitWindow();
