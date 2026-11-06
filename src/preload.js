@@ -16,6 +16,7 @@ contextBridge.exposeInMainWorld(
       return () => ipcRenderer.removeListener("generation-progress", listener);
     },
     checkLocalAI: () => ipcRenderer.invoke("check-local-ai"),
+    finishLocal: () => ipcRenderer.invoke("finish-local"),
     generateLocal: (payload) => ipcRenderer.invoke("generate-local", payload),
     checkAppleAI: () => ipcRenderer.invoke("check-apple-ai"),
     generateApple: (payload) => ipcRenderer.invoke("generate-apple", payload),
