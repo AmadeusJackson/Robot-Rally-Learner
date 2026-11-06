@@ -15,6 +15,13 @@ test('selects a newer stable installer for this architecture',()=>{
  assert.throws(()=>selectInstaller({...release,prerelease:true},'1.0.0','arm64'));
  assert.throws(()=>selectInstaller({...release,assets:[{...asset,browser_download_url:'https://example.org/file'}]},'1.0.0','arm64'));
 });
+test('Windows selects its EXE when the release also has Mac downloads',()=>{
+ const exeName='Robot-Rally-Learning-1.10.0-windows-x64.exe';
+ const exe={...asset,name:exeName,browser_download_url:asset.browser_download_url.replace(name,exeName)};
+ const both={...release,assets:[asset,exe]};
+ assert.equal(selectInstaller(both,'1.9.9','x64','win32').url,exe.browser_download_url);
+ assert.throws(()=>selectInstaller(release,'1.9.9','x64','win32'));
+});
 test('opens only verified downloads and cleans up damaged ones',async()=>{
  const directory=await fs.mkdtemp(path.join(os.tmpdir(),'rally-update-test-'));
  let body=Buffer.alloc(bytes.length), opened;
