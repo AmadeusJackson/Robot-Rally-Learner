@@ -170,13 +170,17 @@ app.whenReady().then(() => {
       generating = false;
     }
   });
+  let finishLocal = false;
+  handle("finish-local", () => { finishLocal = true; });
   handle("generate-local", async ({decks,settings}) => {
     if (generating) throw Error("Generation is already in progress.");
     generating = true;
+    finishLocal = false;
     try { return await generateAppleLevels(decks,settings,localAI, progress => {
+      if (finishLocal && progress.accepted) return false;
       if (win && !win.isDestroyed()) win.webContents.send("generation-progress",progress);
     }); }
-    finally { generating = false; }
+    finally { localAI.dispose(); generating = false; }
   });
   createWindow();
   app.on("activate", () => {

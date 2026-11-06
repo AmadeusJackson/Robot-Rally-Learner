@@ -26,10 +26,9 @@ def select_reviewed_answer(review, choices):
         raise ValueError('Reviewer disagreed with its individual answer checks')
     return solved
 
-def main():
-    from mlx_lm import load, generate
+def question(request, model, tokenizer):
+    from mlx_lm import generate
     from mlx_lm.sample_utils import make_sampler
-    request = json.loads(sys.stdin.read(40001))
     text = request['text']
     if not isinstance(text, str) or not 1 <= len(text) <= 8000:
         raise ValueError('Invalid source text')
@@ -50,12 +49,11 @@ def main():
     difficulty = request.get('difficulty', 'medium')
     if difficulty not in ['easy', 'medium', 'hard', 'custom']:
         raise ValueError('Invalid difficulty')
-    model, tokenizer = load(sys.argv[1])
     def respond(system, prompt, reasoning=False):
         tokens = tokenizer.apply_chat_template([
             {'role':'system', 'content':system}, {'role':'user', 'content':prompt}
         ], tokenize=False, add_generation_prompt=True, enable_thinking=False)
-        output = generate(model, tokenizer, prompt=tokens, max_tokens=2500 if reasoning else 1800,
+        output = generate(model, tokenizer, prompt=tokens, max_tokens=700 if reasoning else 640,
                           max_kv_size=8192, sampler=make_sampler(temp=0.7, top_p=0.8, top_k=20), verbose=False)
         output = output.split('</think>')[-1]
         start, end = output.find('{'), output.rfind('}')
@@ -74,8 +72,8 @@ def main():
       'Return JSON only. No question about slides or presentation locations.',
       f'''Difficulty: {difficulty}. {task}
 For medium/custom/hard, test a prediction or inference using a concrete experimental condition. The scenario contains statements only, 20-40 words; prompt is one positive question. Use the source's actual mechanisms and relationships. Never invent an engineered biochemical pathway, change reaction yields, alter a scientific law, or assume an unstated causal relationship. Do not merely repeat an experiment's stated result and ask for it again.
-Return JSON with these fields: {{"scenario":"...", "prompt":"...", "answer":"...", "distractors":["..."], "explanation":"..."}}.
-Include exactly {count} plausible wrong choices. All choices must answer the same question and be mutually exclusive, at most 12 words each. Each wrong choice must conflict with the source under the stated conditions; another valid mechanism or an unmentioned possibility is not a fair wrong choice. Ask only one question. Use positive wording, avoiding NOT/EXCEPT/contradiction tasks. Avoid missing-word exercises and giving away the answer. Answer wording may be inferred rather than copied. Explain the reasoning briefly.
+Return JSON with these fields: {{"scenario":"...", "prompt":"...", "answer":"...", "distractors":["..."]}}.
+Include exactly {count} plausible wrong choices. All choices must answer the same question and be mutually exclusive, at most 12 words each. Each wrong choice must conflict with the source under the stated conditions; another valid mechanism or an unmentioned possibility is not a fair wrong choice. Ask only one question. Use positive wording, avoiding NOT/EXCEPT/contradiction tasks. Avoid missing-word exercises and giving away the answer. Answer wording may be inferred rather than copied.
 Do not repeat: {json.dumps(request.get('previousPrompts', []))}
 TEACHING PASSAGES:\n{source_bundle}''')
     scenario = draft.pop('scenario', '')
@@ -100,18 +98,24 @@ TEACHING PASSAGES:\n{source_bundle}''')
     import random
     choices = [answer] + distractors
     random.shuffle(choices)
+    labels = list('ABCDEFGH'[:len(choices)])
     review = respond(
       'Independently solve and critique a multiple-choice question using the source. '
       'Read every clause literally. Reject unsupported assumptions, contradictions and ambiguous answers. '
       'Distractors must be plausible answers of the same kind, not fragments or irrelevant labels. Return JSON only.',
       f'''TEACHING PASSAGES:\n{source_bundle}
 QUESTION: {draft['prompt']}
-OPTIONS: {json.dumps(choices)}
+OPTIONS: {json.dumps(dict(zip(labels, choices)))}
 Difficulty: {difficulty}.
 For each option, sourceVerdict is supports only if the source and scenario justify it, contradicts only if they establish it is wrong, and unclear otherwise. A choice is not contradicted just because it is unstated, less direct, or less familiar. Reject if any option is unclear. Evaluate EVERY option independently against the exact question, without assuming which answer the writer intended. "Essential" can apply to several ingredients; reject if more than one is necessary. "Supports" can apply to several outcomes, including logical implications not quoted verbatim; reject if more than one supports it. Never assume an unmentioned ingredient is present or absent. If the scenario already states the requested observation, reject it as recall.
 Choose sourceIndex as the numbered source that most directly supports the correct answer.
-Return {{"sourceIndex":0, "evaluations":[{{"option":"copy an option exactly","isCorrect":true,"sourceVerdict":"supports or contradicts or unclear","reason":"brief literal evaluation"}}], "selectedAnswer":"copy the exact best option or INVALID", "hasExactlyOneCorrectAnswer":true, "isGrounded":true, "requiresReasoning":true, "plausibleDistractors":true, "reason":"Explain in under 90 words why your answer follows and why the nearest competitor fails."}}.
+Use the option letters only. For each letter return one verdict: supports, contradicts, or unclear. Return exactly one JSON object without prose. Format: {{"sourceIndex":0, "verdicts":{{"A":"unclear"}}, "selected":"best letter or INVALID", "hasExactlyOneCorrectAnswer":true, "isGrounded":true, "requiresReasoning":true, "plausibleDistractors":true}}. Include ALL letters in verdicts.
 Set each boolean honestly. requiresReasoning is FALSE if the learner merely matches a described process to its name, recalls a single stated fact, or sees the answer in the question. It is true only when a concrete changed condition or comparison requires a prediction or inference. Review the scientific logic before returning JSON. Reject invented hypotheses that the source does not establish, even if they sound plausible. A structural observation cannot establish a function or causal necessity by itself. Keep your reasoning concise.''', reasoning=True)
+    verdicts = review.get('verdicts')
+    if not isinstance(verdicts, dict) or set(verdicts) != set(labels) or review.get('selected') not in labels:
+        raise ValueError('Incomplete or ambiguous option review')
+    review['evaluations'] = [dict(option=c, isCorrect=k==review['selected'], sourceVerdict=verdicts[k]) for k,c in zip(labels,choices)]
+    review['selectedAnswer'] = choices[labels.index(review['selected'])]
     solved = select_reviewed_answer(review, choices)
     if solved not in choices or not solved.strip():
         raise ValueError('Independent reviewer did not find a source-backed answer')
@@ -121,8 +125,6 @@ Set each boolean honestly. requiresReasoning is FALSE if the learner merely matc
         raise ValueError('Question did not pass local review (' + ', '.join(key for key in required if review.get(key) is not True) + '): ' + str(review.get('reason',''))[:300])
     if re.search(r'(?<!\w)'+re.escape(solved)+r'(?!\w)',draft['prompt'],re.I):
         raise ValueError('Question gives away its answer')
-    if re.search(r'irrelevant|not a (?:described|valid|process)|(?<!un)\bambiguous\b|more than one (?:correct|valid)', str(review.get('reason','')), re.I):
-        raise ValueError('Review found weak or ambiguous options')
     source_index = review.get('sourceIndex')
     if type(source_index) is not int or not 0 <= source_index < len(passages):
         raise ValueError('Reviewer did not identify supporting evidence')
@@ -130,9 +132,15 @@ Set each boolean honestly. requiresReasoning is FALSE if the learner merely matc
     source_reminder = re.sub(r'\s+', ' ', html.unescape(quote).replace('<number>', '')).strip()
     draft.update(answer=solved, distractors=[c for c in choices if c!=solved],
                  explanation='From your lesson: ' + source_reminder, quote=quote, review=review, sourceIndex=source_index)
-    print(json.dumps(draft))
+    return draft
 
 if __name__ == '__main__':
-    try: main()
-    except Exception as error:
-        print(json.dumps({'error':str(error)[:800]}))
+    from mlx_lm import load
+    model, tokenizer = load(sys.argv[1])
+    for line in sys.stdin:
+        try:
+            if len(line) > 40001: raise ValueError('Request too large')
+            result = question(json.loads(line), model, tokenizer)
+        except Exception as error:
+            result = {'error': str(error)[:800]}
+        print(json.dumps(result), flush=True)

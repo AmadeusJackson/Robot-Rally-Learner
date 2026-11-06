@@ -157,3 +157,10 @@ test("a local answer cites the actual supporting neighboring slide", async () =>
  const q=levels[0].questions[0];
  assert.equal(q.source.quote,ds[0].slides.find(s=>s.number===q.source.slideNumber).text);
 });
+
+test('finishing a draft early returns accepted questions without requesting another candidate', async () => {
+ let calls=0;
+ const p=provider();p.generateAppleQuestion=async()=>{calls++;return draft;};
+ const levels=await generateAppleLevels(decks,{...settings,questionsPerLevel:3},p,({accepted})=>accepted===0);
+ assert.equal(calls,1);assert.equal(levels[0].questions.length,1);
+});

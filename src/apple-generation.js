@@ -53,7 +53,7 @@ async function generateAppleLevels(decks, settings, provider, onProgress = () =>
   let lastFailure = "";
   const maxAttempts = Math.min(total * 3, total + eligible.length);
   for (let i = 0; i < maxAttempts && questions.length < total; i++) {
-    onProgress({accepted: questions.length, total, attempt: i + 1});
+    if (onProgress({accepted: questions.length, total, attempt: i + 1}) === false && questions.length) break;
     try {
       const { deck, slide } = eligible[i % eligible.length];
       const text = [

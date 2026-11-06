@@ -281,7 +281,15 @@ async function checkAppleAI(selectDefault = false) {
   $("refresh-apple").disabled = false;
 }
 $("refresh-apple").onclick = () => checkAppleAI(true);
+$("finish-local").onclick = async () => {
+  $("finish-local").disabled = true;
+  try {
+    await api.finishLocal();
+    if (busy) $("generation-status").textContent = "Finishing after the current candidate…";
+  } catch (error) { report(error.message); $("finish-local").disabled = false; }
+};
 api.onGenerationProgress(({accepted,total,attempt}) => {
+  if (busy && accepted) $("finish-local").hidden = false;
   if (busy) $("generation-status").textContent = `Writing and checking questions: ${accepted} of ${total} accepted. Working on candidate ${attempt}…`;
 });
 $("generate").onclick = async () => {
@@ -316,6 +324,7 @@ $("generate").onclick = async () => {
     if ($("mode").value === "offline") openAuthor();
   } finally {
     busy = false;
+    $("finish-local").hidden = true; $("finish-local").disabled = false;
     $("generate").disabled = false;
   }
 };
