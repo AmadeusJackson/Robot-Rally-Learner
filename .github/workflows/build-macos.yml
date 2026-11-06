@@ -1,4 +1,4 @@
-name: Build macOS installers
+name: Build desktop installers
 
 on:
   workflow_dispatch:
@@ -52,9 +52,36 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
+  windows:
+    name: Windows x64
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+      - run: npm ci
+      - run: npm run dist:win -- --publish never
+      - name: Install and test the Windows build
+        shell: pwsh
+        run: |
+          $setup = (Get-ChildItem dist/*.exe).FullName
+          $target = "$env:RUNNER_TEMP/rally-installed"
+          $proc = Start-Process -FilePath $setup -ArgumentList "/S", "/D=$target" -Wait -PassThru
+          if ($proc.ExitCode -ne 0) { throw "Installer failed with $($proc.ExitCode)" }
+          $env:RALLY_TEST_EXECUTABLE = "$target/Robot Rally Learning.exe"
+          node --test test/e2e.cjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Robot-Rally-Learning-Windows-x64
+          path: dist/*.exe
+          if-no-files-found: error
+          retention-days: 30
+
   publish-release:
-    name: Publish tagged Mac installers
-    needs: build
+    name: Publish desktop installers
+    needs: [build, windows]
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     permissions:
@@ -62,7 +89,7 @@ jobs:
     steps:
       - uses: actions/download-artifact@v4
         with:
-          pattern: Robot-Rally-Learning-macOS-*
+          pattern: Robot-Rally-Learning-*
           path: installers
           merge-multiple: true
       - name: Publish stable release
@@ -75,4 +102,5 @@ jobs:
           for arch in arm64 x64; do
             mv "installers/Robot Rally Learning-$version-$arch.dmg" "installers/Robot-Rally-Learning-$version-$arch.dmg"
           done
-          gh release create "$GITHUB_REF_NAME" installers/*.dmg --repo "$GITHUB_REPOSITORY" --verify-tag --generate-notes
+          test -s "installers/Robot-Rally-Learning-$version-windows-x64.exe"
+          gh release create "$GITHUB_REF_NAME" installers/*.dmg installers/*.exe --repo "$GITHUB_REPOSITORY" --verify-tag --generate-notes

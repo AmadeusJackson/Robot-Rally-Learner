@@ -91,7 +91,7 @@ app.whenReady().then(() => {
   );
   session.defaultSession.setPermissionCheckHandler(() => false);
   const updater = require("./updates").createUpdater({
-    version: app.getVersion(), arch: process.arch,
+    version: app.getVersion(), arch: process.arch, platform: process.platform,
     directory: path.join(app.getPath("temp"), "robot-rally-installers"),
     openPath: file => shell.openPath(file)
   });
