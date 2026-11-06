@@ -67,10 +67,13 @@ jobs:
         shell: pwsh
         run: |
           $setup = (Get-ChildItem dist/*.exe).FullName
-          $target = "$env:RUNNER_TEMP/rally-installed"
-          $proc = Start-Process -FilePath $setup -ArgumentList "/S", "/D=$target" -Wait -PassThru
+          $proc = Start-Process -FilePath $setup -ArgumentList "/S" -Wait -PassThru
           if ($proc.ExitCode -ne 0) { throw "Installer failed with $($proc.ExitCode)" }
-          $env:RALLY_TEST_EXECUTABLE = "$target/Robot Rally Learning.exe"
+          $app = Get-ChildItem (Join-Path $env:LOCALAPPDATA 'Programs') -Recurse -File -Filter 'Robot Rally Learning.exe' | Select-Object -First 1
+          if (!$app) { throw "Installed Robot Rally executable was not found." }
+          $env:RALLY_TEST_EXECUTABLE = $app.FullName
+          $env:DEBUG = 'pw:browser*'
+          Write-Host "Testing installed executable at $($app.FullName)"
           node --test test/e2e.cjs
       - uses: actions/upload-artifact@v4
         with:
