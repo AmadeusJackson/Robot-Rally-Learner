@@ -78,7 +78,7 @@ canvas { width: 100%; aspect-ratio: 5 / 3; height: auto; display: block; border:
 #overlay { position: absolute; inset: 0; background: #18191aee; display: grid; place-items: safe center; border-radius: 5px; overflow-y: auto; }
 #overlay > div { max-width: 580px; width: 100%; min-width: 0; text-align: center; padding: 25px; }
 #overlay p { color: var(--text); }
-.game-bottom { display: flex; justify-content: space-between; gap: 15px; flex-wrap: wrap; padding-top: 12px; }
+.game-bottom { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; gap: 15px; padding-top: 12px; }
 #feedback { color: var(--text); }
 #hint { font-size: 12px; max-width: 700px; }
 .touch { text-align: center; padding: 8px 0; flex-shrink: 0; }

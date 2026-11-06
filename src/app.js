@@ -280,6 +280,23 @@ async function checkAppleAI(selectDefault = false) {
   if (selectDefault) $("mode").value = local.available ? "local" : result.available ? "apple" : "offline";
   $("refresh-apple").disabled = false;
 }
+async function updateApp(download) {
+  const check = $("check-update"), install = $("download-update"), status = $("update-status");
+  check.disabled = install.disabled = true;
+  if (!download) install.hidden = true;
+  status.textContent = download ? "Downloading and verifying the installer…" : "Checking GitHub…";
+  try {
+    const result = await (download ? api.downloadUpdate() : api.checkUpdate());
+    status.textContent = result.message;
+    install.hidden = !result.available;
+  } catch (error) {
+    status.textContent = /fetch failed|network|timeout|timed out/i.test(error.message)
+      ? "Couldn’t reach GitHub. Check your internet connection and try again."
+      : error.message.replace(/^Error invoking remote method '[^']+': Error: /, "");
+  } finally { check.disabled = install.disabled = false; }
+}
+$("check-update").onclick = () => updateApp(false);
+$("download-update").onclick = () => updateApp(true);
 $("refresh-apple").onclick = () => checkAppleAI(true);
 $("finish-local").onclick = async () => {
   $("finish-local").disabled = true;
@@ -1034,13 +1051,16 @@ function fitWindow() {
   if ($("game").hidden) return;
   const field = canvas.parentElement;
   const top = field.getBoundingClientRect().top + window.scrollY;
-  const bottom = document.querySelector(".game-bottom").getBoundingClientRect().height;
+  // Reserve room for the controls. Answer explanations can flow down the page.
+  const controls = document.querySelector(".game-bottom .touch");
+  const bottom = controls.getBoundingClientRect().height +
+    parseFloat(getComputedStyle(controls.parentElement).paddingTop);
   const available = Math.max(240, window.innerHeight - top - bottom - legendHeight - 40);
   field.style.maxWidth = `${available * 5 / 3}px`;
 }
 const layoutObserver = new ResizeObserver(fitWindow);
 [document.querySelector("main"), document.querySelector(".game-top"),
- document.querySelector(".prompt-panel"), document.querySelector(".game-bottom"),
+ document.querySelector(".prompt-panel"), document.querySelector(".game-bottom .touch"),
  $("controller-legend")].filter(Boolean).forEach(el => layoutObserver.observe(el));
 window.addEventListener("resize", fitWindow);
 fitWindow();

@@ -51,3 +51,28 @@ jobs:
           path: dist/*.dmg
           if-no-files-found: error
           retention-days: 30
+
+  publish-release:
+    name: Publish tagged Mac installers
+    needs: build
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: Robot-Rally-Learning-macOS-*
+          path: installers
+          merge-multiple: true
+      - name: Publish stable release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          [[ "$GITHUB_REF_NAME" =~ ^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]
+          version="${GITHUB_REF_NAME#v}"
+          for arch in arm64 x64; do
+            mv "installers/Robot Rally Learning-$version-$arch.dmg" "installers/Robot-Rally-Learning-$version-$arch.dmg"
+          done
+          gh release create "$GITHUB_REF_NAME" installers/*.dmg --repo "$GITHUB_REPOSITORY" --verify-tag --generate-notes

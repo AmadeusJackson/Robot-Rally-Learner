@@ -54,6 +54,19 @@ test('pages, review, dialogs and game reflow across window sizes', {timeout: 120
       }
       await p.evaluate(() => { show('configure'); document.querySelector('#approved').checked=true; });
       await p.locator('#play').click();
+      await check(width + ' before pickup');
+      const fieldSize = () => p.locator('#field').evaluate(el => [el.clientWidth, el.clientHeight]);
+      const before = await fieldSize();
+      await p.evaluate(() => {
+        const q = current();
+        const explanation = q.explanation;
+        q.explanation = 'This explanation includes supporting evidence from the presentation. '.repeat(24);
+        const wrong = items.find(item => !q.correctIds.includes(item.id));
+        pickup(wrong, performance.now());
+        q.explanation = explanation;
+      });
+      await check(width + ' after incorrect pickup');
+      assert.deepEqual(await fieldSize(), before, width + ': incorrect pickup resized the driving field');
       await p.locator('#pause').click();
       await check(`${width} game`);
       const ratio = await p.locator('#field').evaluate(e => e.clientWidth / e.clientHeight);
