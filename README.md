@@ -1,8 +1,10 @@
 # Robot Rally Learning
 
-A local-first macOS desktop learning game built with Electron. Import a PowerPoint, review source-grounded challenges, and drive a robot to collect answers. No cloud account is required.
+A local-first macOS and Windows desktop learning game built with Electron. Import a PowerPoint, review source-grounded challenges, and drive a robot to collect answers. No cloud account is required.
 
 ## Getting started
+
+Download the installer for your computer from [GitHub Releases](https://github.com/AmadeusJackson/Robot-Rally-Learner/releases/latest). On Windows x64, run the EXE and import a .pptx for offline practice. Apple Intelligence and the optional MLX model require a supported Mac.
 
 Install the matching macOS DMG by dragging the app to Applications. See [BUILD_MAC.md](BUILD_MAC.md) for installer builds, GitHub Actions, signing, and unsigned-app limitations.
 
@@ -106,6 +108,6 @@ Model: https://huggingface.co/mlx-community/Qwen3.5-9B-4bit (Apache-2.0). Runtim
 
 ## App updates
 
-In Settings, choose **Check GitHub for updates**. When a newer stable release is available, **Download and open installer** downloads the DMG for the app’s architecture and verifies its size and SHA-256 digest against the GitHub release asset. Finish your game, quit the app, and copy the new app into Applications from the opened disk image. Future launches should use that copy. Saved presentations and local AI models live in Application Support. Checks run only when requested and require internet access.
+In Settings, choose **Check GitHub for updates**. When a newer stable release is available, **Download and open installer** downloads the installer for the app’s operating system and architecture and verifies its size and SHA-256 digest against the GitHub release asset. Finish your game, quit the app, and copy the new app into Applications from the opened disk image. Future launches should use that copy. Saved presentations and local AI models live in Application Support. Checks run only when requested and require internet access.
 
-To distribute an update, bump the package version and lockfile, merge the release commit, then push a matching stable tag such as `v1.4.2`. Both macOS builds must succeed before the tag workflow publishes the two DMGs as a GitHub Release. Branch builds produce Actions artifacts for testing.
+To distribute an update, bump the package version and lockfile, merge the release commit, then push a matching stable tag such as `v1.4.2`. The Windows and macOS builds must succeed before the tag workflow publishes the Windows x64 installer and both DMGs as a GitHub Release. Branch builds produce Actions artifacts for testing.

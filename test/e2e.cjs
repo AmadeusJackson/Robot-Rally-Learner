@@ -16,7 +16,9 @@ test(
     const errors = [];
     const launch = async () => {
       const a = await electron.launch({
-        args: [root],
+        ...(process.env.RALLY_TEST_EXECUTABLE
+          ? {executablePath: process.env.RALLY_TEST_EXECUTABLE, args: []}
+          : {args: [root]}),
         env: {
           ...process.env,
           ROBOT_RALLY_USER_DATA: path.join(temp, "profile"),

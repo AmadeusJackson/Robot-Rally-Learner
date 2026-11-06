@@ -22,7 +22,7 @@ Use `npm run dist:mac:arm64` or `npm run dist:mac:x64` to build one architecture
 
 ## GitHub Actions
 
-Upload the **contents of this project directory** to the root of your private repository, including `package-lock.json`, `build/`, `src/`, `test/`, and `.github/workflows/build-macos.yml`. Do not place the project one directory below the repository root. Enable GitHub Actions for the repository, and commit the workflow to its default branch. The **Actions → Build macOS installers → Run workflow** button then appears for users with write access. Pushes to `main`/`master` and version tags also build automatically.
+Upload the **contents of this project directory** to the root of your private repository, including `package-lock.json`, `build/`, `src/`, `test/`, and `.github/workflows/build-macos.yml`. Do not place the project one directory below the repository root. Enable GitHub Actions for the repository, and commit the workflow to its default branch. The **Actions → Build desktop installers → Run workflow** button then appears for users with write access. Pushes to `main`/`master` and version tags also build automatically.
 
 Each matrix job runs tests and builds one architecture, then uploads its DMG as a downloadable workflow artifact. A private repository needs available macOS Actions minutes and policies that allow the referenced actions. Artifact availability requires a successful actual workflow run; this source archive cannot establish that a private repository has run it.
 
