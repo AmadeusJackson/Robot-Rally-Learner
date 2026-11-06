@@ -1,6 +1,6 @@
 {
   "name": "robot-rally-desktop",
-  "version": "1.4.1",
+  "version": "1.4.2",
   "private": true,
   "description": "Local PowerPoint-to-robot-learning game",
   "main": "src/main.js",

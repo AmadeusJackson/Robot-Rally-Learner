@@ -1,5 +1,5 @@
 "use strict";
-const { app, BrowserWindow, ipcMain, dialog, session } = require("electron");
+const { app, BrowserWindow, ipcMain, dialog, session, shell } = require("electron");
 const path = require("node:path");
 const { pathToFileURL } = require("node:url");
 const { randomUUID } = require("node:crypto");
@@ -90,6 +90,13 @@ app.whenReady().then(() => {
     (_wc, _permission, callback) => callback(false),
   );
   session.defaultSession.setPermissionCheckHandler(() => false);
+  const updater = require("./updates").createUpdater({
+    version: app.getVersion(), arch: process.arch,
+    directory: path.join(app.getPath("temp"), "robot-rally-installers"),
+    openPath: file => shell.openPath(file)
+  });
+  handle("check-update", () => updater.check());
+  handle("download-update", () => updater.download());
   handle("load-state", () => store.load());
   handle("save-state", (state) => store.save(validateState(state)));
   let importing = false;

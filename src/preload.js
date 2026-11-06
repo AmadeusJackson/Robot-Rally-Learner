@@ -3,6 +3,8 @@ const { contextBridge, ipcRenderer } = require("electron");
 contextBridge.exposeInMainWorld(
   "desktopAPI",
   Object.freeze({
+    checkUpdate: () => ipcRenderer.invoke("check-update"),
+    downloadUpdate: () => ipcRenderer.invoke("download-update"),
     loadState: () => ipcRenderer.invoke("load-state"),
     saveState: (state) => ipcRenderer.invoke("save-state", state),
     selectPresentations: () => ipcRenderer.invoke("select-presentations"),

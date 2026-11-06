@@ -103,3 +103,9 @@ On an Apple Silicon Mac with at least 16 GB memory, Qwen3.5 9B can generate and 
 When installed, **Local study AI · Qwen3.5 9B** is selected by default; Apple Intelligence remains selectable. Generation runs in a subprocess with Hugging Face offline mode enabled and no web server. Slides are not uploaded. The model loads once per draft and is released when generation finishes or the app quits. The independent checker returns compact verdicts for each option. Once a candidate passes, **Finish with accepted questions** lets you end the run after the current candidate and review the shorter draft. Both models can make mistakes, and preview/approval remains required. Local generation shows accepted-question progress and may return a shorter draft if candidates fail checks.
 
 Model: https://huggingface.co/mlx-community/Qwen3.5-9B-4bit (Apache-2.0). Runtime: https://github.com/ml-explore/mlx-lm (MIT).
+
+## App updates
+
+In Settings, choose **Check GitHub for updates**. When a newer stable release is available, **Download and open installer** downloads the DMG for the app’s architecture and verifies its size and SHA-256 digest against the GitHub release asset. Finish your game, quit the app, and copy the new app into Applications from the opened disk image. Future launches should use that copy. Saved presentations and local AI models live in Application Support. Checks run only when requested and require internet access.
+
+To distribute an update, bump the package version and lockfile, merge the release commit, then push a matching stable tag such as `v1.4.2`. Both macOS builds must succeed before the tag workflow publishes the two DMGs as a GitHub Release. Branch builds produce Actions artifacts for testing.
