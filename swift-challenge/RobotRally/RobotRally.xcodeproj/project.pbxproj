@@ -5,25 +5,27 @@
  objectVersion = 56;
  objects = {
   A001 = {isa = PBXProject; attributes = {LastUpgradeCheck = 2700;}; buildConfigurationList = A010; compatibilityVersion = "Xcode 14.0"; developmentRegion = en; knownRegions = (en, Base); mainGroup = A002; productRefGroup = A003; projectDirPath = ""; projectRoot = ""; targets = (A004);};
-  A002 = {isa = PBXGroup; children = (F001, F002, F003, A003); sourceTree = "<group>";};
+  A002 = {isa = PBXGroup; children = (F001, F002, F003, F005, A003); sourceTree = "<group>";};
   A003 = {isa = PBXGroup; children = (F004); name = Products; sourceTree = "<group>";};
   F001 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RobotRallyApp.swift; sourceTree = "<group>";};
   F002 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RallyScene.swift; sourceTree = "<group>";};
   F003 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Lesson.swift; sourceTree = "<group>";};
+  F005 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LessonExperiment.swift; sourceTree = "<group>";};
   F004 = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Robot Rally Swift.app"; sourceTree = BUILT_PRODUCTS_DIR;};
   B001 = {isa = PBXBuildFile; fileRef = F001;};
   B002 = {isa = PBXBuildFile; fileRef = F002;};
+  B005 = {isa = PBXBuildFile; fileRef = F005;};
   B003 = {isa = PBXBuildFile; fileRef = F003;};
   A004 = {isa = PBXNativeTarget; buildConfigurationList = A011; buildPhases = (A005, A006, A007); buildRules = (); dependencies = (); name = RobotRally; productName = "Robot Rally Swift"; productReference = F004; productType = "com.apple.product-type.application";};
-  A005 = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (B001, B002, B003); runOnlyForDeploymentPostprocessing = 0;};
+  A005 = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (B001, B002, B003, B005); runOnlyForDeploymentPostprocessing = 0;};
   A006 = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0;};
   A007 = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0;};
   A010 = {isa = XCConfigurationList; buildConfigurations = (C001, C002); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release;};
   A011 = {isa = XCConfigurationList; buildConfigurations = (C003, C004); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release;};
   C001 = {isa = XCBuildConfiguration; buildSettings = {ALWAYS_SEARCH_USER_PATHS = NO; MACOSX_DEPLOYMENT_TARGET = 14.0; SDKROOT = macosx; SWIFT_VERSION = 5.0;}; name = Debug;};
   C002 = {isa = XCBuildConfiguration; buildSettings = {ALWAYS_SEARCH_USER_PATHS = NO; MACOSX_DEPLOYMENT_TARGET = 14.0; SDKROOT = macosx; SWIFT_VERSION = 5.0;}; name = Release;};
-  C003 = {isa = XCBuildConfiguration; buildSettings = {PRODUCT_NAME = "Robot Rally Swift"; PRODUCT_BUNDLE_IDENTIFIER = org.robotrally.swiftchallenge; GENERATE_INFOPLIST_FILE = YES; INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education"; CODE_SIGN_STYLE = Automatic; CODE_SIGN_IDENTITY = "-"; CURRENT_PROJECT_VERSION = 1; MARKETING_VERSION = 0.1.0; SWIFT_OPTIMIZATION_LEVEL = "-Onone"; ENABLE_APP_SANDBOX = YES;}; name = Debug;};
-  C004 = {isa = XCBuildConfiguration; buildSettings = {PRODUCT_NAME = "Robot Rally Swift"; PRODUCT_BUNDLE_IDENTIFIER = org.robotrally.swiftchallenge; GENERATE_INFOPLIST_FILE = YES; INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education"; CODE_SIGN_STYLE = Automatic; CODE_SIGN_IDENTITY = "-"; CURRENT_PROJECT_VERSION = 1; MARKETING_VERSION = 0.1.0; SWIFT_OPTIMIZATION_LEVEL = "-O"; ENABLE_APP_SANDBOX = YES;}; name = Release;};
+  C003 = {isa = XCBuildConfiguration; buildSettings = {PRODUCT_NAME = "Robot Rally Swift"; PRODUCT_BUNDLE_IDENTIFIER = org.robotrally.swiftchallenge; GENERATE_INFOPLIST_FILE = YES; INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education"; CODE_SIGN_STYLE = Automatic; CODE_SIGN_IDENTITY = "-"; CURRENT_PROJECT_VERSION = 1; MARKETING_VERSION = 0.2.0; SWIFT_OPTIMIZATION_LEVEL = "-Onone"; ENABLE_APP_SANDBOX = YES;}; name = Debug;};
+  C004 = {isa = XCBuildConfiguration; buildSettings = {PRODUCT_NAME = "Robot Rally Swift"; PRODUCT_BUNDLE_IDENTIFIER = org.robotrally.swiftchallenge; GENERATE_INFOPLIST_FILE = YES; INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education"; CODE_SIGN_STYLE = Automatic; CODE_SIGN_IDENTITY = "-"; CURRENT_PROJECT_VERSION = 1; MARKETING_VERSION = 0.2.0; SWIFT_OPTIMIZATION_LEVEL = "-O"; ENABLE_APP_SANDBOX = YES;}; name = Release;};
  };
  rootObject = A001;
 }
