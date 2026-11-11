@@ -95,6 +95,7 @@ struct RallyView: View {
     init(session: RallySession? = nil) {
         _session = State(initialValue: session ?? RallySession())
     }
+    @State private var choosingDirectly = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     private let names = ["Force", "Gears", "Energy"]
     private let icons = ["arrow.right", "gearshape.2", "battery.75percent"]
@@ -104,17 +105,21 @@ struct RallyView: View {
             VStack(spacing: 0) {
                 header
                 Rectangle().fill(RallyStyle.ink.opacity(0.12)).frame(height: 1)
+                if session.phase == .driving || session.phase == .feedback {
+                    game
+                } else {
                 ScrollView {
                     Group {
                         switch session.phase {
                         case .welcome: welcome
                         case .results: results
-                        default: challenge(compact: geometry.size.width < 1000, fieldHeight: max(210, min(400, geometry.size.height - 470)))
+                        default: lesson
                         }
                     }
                     .padding(geometry.size.width < 1000 ? 24 : 36)
                     .frame(maxWidth: 1400)
                     .frame(maxWidth: .infinity)
+                }
                 }
             }
             .foregroundStyle(RallyStyle.ink)
@@ -170,7 +175,7 @@ struct RallyView: View {
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 RobotPortrait().frame(maxWidth: .infinity).frame(height: 360)
-                    .accessibilityLabel("Orange four-wheel robot on a marked practice field")
+                    .accessibilityLabel("Competition rover with mecanum wheels and orange bumpers")
             }
             Rectangle().fill(RallyStyle.ink.opacity(0.15)).frame(height: 1)
             HStack(alignment: .top, spacing: 30) {
@@ -195,83 +200,83 @@ struct RallyView: View {
         }.frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    private func challenge(compact: Bool, fieldHeight: CGFloat) -> some View {
-        VStack(alignment: .leading, spacing: 22) {
-            HStack(alignment: .firstTextBaseline) {
-                Text(session.challenge.topic).font(.custom("AvenirNext-Bold", size: 30))
-                Spacer()
-                Text(session.phase == .lesson ? "EXPLORE" : "ON THE FIELD")
-                    .font(.system(size: 11, weight: .semibold, design: .monospaced))
-                    .tracking(1.5).foregroundStyle(RallyStyle.orange)
+    private var lesson: some View {
+        VStack(alignment: .leading, spacing: 24) {
+            Text(session.challenge.topic).font(.custom("AvenirNext-Bold", size: 32))
+            HStack(alignment: .top, spacing: 32) {
+                VStack(alignment: .leading, spacing: 22) {
+                    Text(session.challenge.lesson).font(.system(size: 18)).lineSpacing(7)
+                        .fixedSize(horizontal: false, vertical: true)
+                    Text("Change a setting and watch what happens.")
+                        .font(.system(size: 14)).foregroundStyle(RallyStyle.muted)
+                    Button { session.drive() } label: { Label("Take the wheel", systemImage: "arrow.right") }
+                        .buttonStyle(PrimaryButton()).keyboardShortcut(.defaultAction)
+                        .accessibilityIdentifier("try-challenge")
+                }.frame(maxWidth: .infinity, alignment: .leading)
+                LessonExperiment(index: session.index).id(session.index)
+                    .frame(maxWidth: .infinity).frame(minHeight: 340)
             }
-            if session.phase == .lesson {
-                HStack(alignment: .top, spacing: 32) {
-                    VStack(alignment: .leading, spacing: 22) {
-                        Text(session.challenge.lesson).font(.system(size: 17)).lineSpacing(6)
-                            .fixedSize(horizontal: false, vertical: true)
-                        Text("Try the controls in the experiment, then put the idea to work.")
-                            .font(.system(size: 13)).foregroundStyle(RallyStyle.muted)
-                        Button { session.drive() } label: { Label("Take the wheel", systemImage: "arrow.right") }
-                            .buttonStyle(PrimaryButton()).keyboardShortcut(.defaultAction)
-                            .accessibilityIdentifier("try-challenge")
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    LessonExperiment(index: session.index).id(session.index)
-                        .frame(maxWidth: .infinity).frame(minHeight: 340)
-                }
-                .padding(28).background(Color.white.opacity(0.75), in: RoundedRectangle(cornerRadius: 18))
-                Label("Every answer comes with an explanation. Take your time.", systemImage: "lightbulb")
-                    .font(.system(size: 13)).foregroundStyle(RallyStyle.muted)
-            } else {
-                let layout = AnyLayout(HStackLayout(alignment: .top, spacing: 24))
-                layout {
-                    VStack(alignment: .leading, spacing: 20) {
-                        Text(session.challenge.question).font(.system(size: 17, weight: .medium)).lineSpacing(4)
-                            .fixedSize(horizontal: false, vertical: true)
-                        answerButtons
-                    }.frame(width: compact ? 220 : 280, alignment: .leading)
-                    VStack(spacing: 0) {
-                        ZStack {
-                            FieldView(scene: session.scene, active: session.phase == .driving && !session.paused)
-                                .aspectRatio(840.0 / 520.0, contentMode: .fit)
-                                .frame(height: fieldHeight)
-                                .frame(maxWidth: .infinity)
-                                .background(Color(red: 0.075, green: 0.11, blue: 0.17))
-                                .accessibilityLabel("Driving field. Answer buttons also let you choose without driving.")
-                            if session.paused {
-                                Color.black.opacity(0.55)
-                                VStack(spacing: 16) {
-                                    Image(systemName: "pause.circle").font(.system(size: 35))
-                                    Text("Take a breather").font(.title2.bold())
-                                    Button("Resume driving") { session.togglePause() }.buttonStyle(.borderedProminent)
-                                        .tint(.white).foregroundStyle(RallyStyle.ink)
-                                        .accessibilityIdentifier("resume-driving")
-                                }.foregroundStyle(.white)
-                            }
-                        }
-                        HStack {
-                            Label("WASD / arrows / left stick", systemImage: "gamecontroller")
-                            Spacer()
-                            if session.phase == .driving {
-                                Button(session.paused ? "Resume" : "Pause") { session.togglePause() }
-                                    .buttonStyle(.plain).accessibilityIdentifier("pause-driving")
-                            }
-                        }
-                        .font(.system(size: 11, weight: .medium)).foregroundStyle(.white.opacity(0.7))
-                        .padding(15).background(Color(red: 0.075, green: 0.11, blue: 0.17))
-                    }
-                    .clipShape(RoundedRectangle(cornerRadius: 16))
-                    .frame(maxWidth: .infinity)
-                }
-                feedback
-            }
+            .padding(28).background(Color.white.opacity(0.75), in: RoundedRectangle(cornerRadius: 18))
         }
+    }
+
+    private var game: some View {
+        VStack(spacing: 0) {
+            HStack(alignment: .center, spacing: 28) {
+                VStack(alignment: .leading, spacing: 5) {
+                    Text(session.challenge.topic.uppercased())
+                        .font(.system(size: 10, weight: .semibold, design: .monospaced)).tracking(1.2)
+                        .foregroundStyle(Color.white.opacity(0.55))
+                    Text(session.challenge.question)
+                        .font(.system(size: 19, weight: .medium)).lineSpacing(3)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .foregroundStyle(.white)
+                }
+                Spacer(minLength: 0)
+                Button(session.paused ? "Resume" : "Pause", systemImage: session.paused ? "play.fill" : "pause.fill") { session.togglePause() }
+                    .buttonStyle(.bordered).tint(.white).foregroundStyle(.white)
+                    .disabled(session.phase != .driving)
+                    .accessibilityIdentifier("pause-driving")
+            }.padding(.horizontal, 28).padding(.vertical, 18)
+            ZStack {
+                FieldView(scene: session.scene, active: session.phase == .driving && !session.paused)
+                    .aspectRatio(840.0 / 520.0, contentMode: .fit)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .accessibilityLabel("Driving arena. Choose an answer by driving or use Choose directly below.")
+                if session.paused {
+                    Color.black.opacity(0.65)
+                    VStack(spacing: 18) {
+                        Image(systemName: "pause.circle").font(.system(size: 38))
+                        Text("Paused").font(.title.bold())
+                        Button("Resume driving") { session.togglePause() }
+                            .buttonStyle(.borderedProminent).tint(.white).foregroundStyle(RallyStyle.ink)
+                            .accessibilityIdentifier("resume-driving")
+                    }.foregroundStyle(.white)
+                }
+            }
+            HStack {
+                Label("WASD / arrows / left stick", systemImage: "gamecontroller")
+                Spacer()
+                Button("Choose directly") { choosingDirectly = true }
+                    .buttonStyle(.plain)
+                    .disabled(session.phase != .driving || session.paused)
+                    .popover(isPresented: $choosingDirectly) {
+                        answerButtons.padding(16).frame(width: 320)
+                    }
+                Text("·")
+                Text("ESC to pause")
+            }
+            .foregroundStyle(.white.opacity(0.65)).font(.system(size: 12))
+            .padding(.horizontal, 28).padding(.vertical, 12)
+            feedback.frame(height: 132).background(RallyStyle.paper)
+        }
+        .background(Color(red: 0.075, green: 0.11, blue: 0.17))
     }
 
     private var answerButtons: some View {
         VStack(spacing: 10) {
             ForEach(0..<3) { option in
-                Button { session.answer(option) } label: {
+                Button { session.answer(option); choosingDirectly = false } label: {
                     HStack(alignment: .center, spacing: 12) {
                         Text("\(option + 1)")
                             .font(.system(size: 14, weight: .bold, design: .monospaced))
@@ -312,14 +317,14 @@ struct RallyView: View {
             } else {
                 Image(systemName: "steeringwheel").font(.system(size: 28)).foregroundStyle(RallyStyle.orange)
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("Your call. Your robot.").font(.system(size: 17, weight: .bold))
-                    Text("Drive into an answer bay and hold briefly to collect it. You can also use the answer buttons.")
+                    Text("Drive to your answer").font(.system(size: 17, weight: .bold))
+                    Text("Hold in a bay briefly to confirm your choice. The ring around your robot shows your progress.")
                         .font(.system(size: 14)).foregroundStyle(RallyStyle.muted)
                 }
                 Spacer()
             }
         }
-        .padding(22).frame(minHeight: 120)
+        .padding(.horizontal, 28).padding(.vertical, 18).frame(maxWidth: .infinity, minHeight: 120)
         .background(Color.white.opacity(0.7), in: RoundedRectangle(cornerRadius: 14))
     }
 

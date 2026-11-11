@@ -13,6 +13,10 @@ open '/tmp/robot-rally-swift/Build/Products/Debug/Robot Rally Swift.app'
 
 ## Current milestone
 
+Version 0.3 gives the driving arena the main window area. The question stays above it and the explanation stays below. Direct selection is available through the Choose directly popover. The floor has panel seams, painted markings, and a raised perimeter rail. A detailed rover sprite replaces the initial geometric robot.
+
+`RobotRally/Rover.png` was generated with OpenAI ImageGen for this project. It depicts a fictional competition rover and is bundled locally. Include this use of generative AI in any submission disclosure.
+
 Version 0.2 adds a warm paper-colored interface, a detailed robot and marked field, and interactive experiments for force, gear ratios, and power draw. The robot accelerates and turns smoothly, leaves brief tire marks, and confirms an answer after 0.45 seconds in a bay. Escape or the Pause button pauses driving, and switching away from the app pauses the game automatically. Answer explanations stay below a field sized from the window rather than the explanation length. The controller B button pauses driving, and A continues after feedback. Full controller navigation remains future work. Review the explanations and try the complete experience before expanding the content. Classroom validation, physical controller testing, and accessibility testing are still needed.
 
 ## Authorship and submission preparation

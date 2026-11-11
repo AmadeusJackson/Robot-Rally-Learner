@@ -58,28 +58,44 @@ final class RallyScene: SKScene {
     }
 
     private func buildField() {
-        for x in stride(from: 40, through: 800, by: 40) {
-            for y in stride(from: 40, through: 480, by: 40) {
-                let dot = SKShapeNode(circleOfRadius: 1)
-                dot.position = CGPoint(x: x, y: y)
-                dot.fillColor = NSColor.white.withAlphaComponent(0.10)
-                dot.strokeColor = .clear
-                addChild(dot)
+        // Individual floor panels and rails give the arena depth without
+        // changing the flat, predictable driving surface.
+        let floor = box(CGSize(width: 796, height: 450), at: CGPoint(x: 420, y: 271), fill: NSColor(red: 0.18, green: 0.23, blue: 0.27, alpha: 1), radius: 18)
+        addChild(floor)
+        for column in 0..<8 {
+            for row in 0..<5 {
+                let light = (column + row) % 2 == 0
+                let panel = box(CGSize(width: 96, height: 85), at: CGPoint(x: 72 + column * 99, y: 92 + row * 88), fill: NSColor(white: light ? 0.36 : 0.32, alpha: 0.11), radius: 2)
+                addChild(panel)
             }
         }
+        let railShadow = SKShapeNode(rect: CGRect(x: 19, y: 40, width: 802, height: 456), cornerRadius: 22)
+        railShadow.strokeColor = .black.withAlphaComponent(0.6)
+        railShadow.lineWidth = 12
+        addChild(railShadow)
         let border = SKShapeNode(rect: CGRect(x: 22, y: 46, width: 796, height: 450), cornerRadius: 22)
-        border.strokeColor = NSColor.white.withAlphaComponent(0.17)
-        border.lineWidth = 2
+        border.strokeColor = NSColor(red: 0.48, green: 0.54, blue: 0.59, alpha: 1)
+        border.lineWidth = 5
         addChild(border)
+        for x in [40, 800] {
+            for y in [65, 477] {
+                let bolt = SKShapeNode(circleOfRadius: 4)
+                bolt.position = CGPoint(x: x, y: y)
+                bolt.fillColor = NSColor(white: 0.65, alpha: 1)
+                bolt.strokeColor = NSColor(white: 0.1, alpha: 1)
+                bolt.lineWidth = 2
+                addChild(bolt)
+            }
+        }
         let centerLine = CGMutablePath()
         centerLine.move(to: CGPoint(x: 42, y: 255))
         centerLine.addLine(to: CGPoint(x: 798, y: 255))
         let line = SKShapeNode(path: centerLine)
-        line.strokeColor = NSColor.white.withAlphaComponent(0.14)
+        line.strokeColor = NSColor.white.withAlphaComponent(0.35)
         addChild(line)
         let center = SKShapeNode(circleOfRadius: 50)
         center.position = CGPoint(x: 420, y: 255)
-        center.strokeColor = NSColor.white.withAlphaComponent(0.14)
+        center.strokeColor = NSColor.white.withAlphaComponent(0.35)
         addChild(center)
         for x in [45, 795] {
             for y in stride(from: 130, through: 220, by: 16) {
@@ -102,34 +118,12 @@ final class RallyScene: SKScene {
 
     private func buildRobot() {
         robot.zPosition = 3
-        let shadow = box(CGSize(width: 53, height: 65), at: CGPoint(x: 3, y: -5), fill: .black.withAlphaComponent(0.3), radius: 14)
+        let shadow = box(CGSize(width: 64, height: 74), at: CGPoint(x: 4, y: -6), fill: .black.withAlphaComponent(0.35), radius: 14)
         robot.addChild(shadow)
         robot.addChild(chassis)
-        for x: CGFloat in [-25, 25] {
-            for y: CGFloat in [-17, 17] {
-                let wheel = box(CGSize(width: 12, height: 22), at: CGPoint(x: x, y: y), fill: NSColor(white: 0.035, alpha: 1), radius: 4)
-                chassis.addChild(wheel)
-                for offset in [-6, 0, 6] {
-                    wheel.addChild(box(CGSize(width: 9, height: 2), at: CGPoint(x: 0, y: offset), fill: NSColor(white: 0.28, alpha: 1), radius: 0))
-                }
-            }
-        }
-        chassis.addChild(box(CGSize(width: 43, height: 56), at: .zero, fill: amber, radius: 11))
-        chassis.addChild(box(CGSize(width: 31, height: 25), at: CGPoint(x: 0, y: -4), fill: NSColor(red: 0.74, green: 0.28, blue: 0.14, alpha: 1), radius: 5))
-        chassis.addChild(box(CGSize(width: 26, height: 9), at: CGPoint(x: 0, y: 16), fill: NSColor(white: 0.09, alpha: 1), radius: 4))
-        for x: CGFloat in [-7, 7] {
-            let eye = SKShapeNode(circleOfRadius: 2.3)
-            eye.fillColor = NSColor(red: 0.77, green: 0.91, blue: 1, alpha: 1)
-            eye.strokeColor = .clear
-            eye.position = CGPoint(x: x, y: 16)
-            chassis.addChild(eye)
-        }
-        let number = SKLabelNode(text: "R")
-        number.fontName = "AvenirNext-Heavy"
-        number.fontSize = 17
-        number.verticalAlignmentMode = .center
-        number.position.y = -5
-        chassis.addChild(number)
+        let rover = SKSpriteNode(imageNamed: "Rover")
+        rover.size = CGSize(width: 82, height: 82)
+        chassis.addChild(rover)
         addChild(robot)
     }
 
@@ -137,9 +131,11 @@ final class RallyScene: SKScene {
         bays.removeAllChildren()
         zones.removeAll()
         for (index, answer) in answers.enumerated() {
-            let zone = box(CGSize(width: 220, height: 136), at: destinations[index], fill: blue.withAlphaComponent(0.09), radius: 14)
-            zone.strokeColor = blue.withAlphaComponent(0.5)
-            zone.lineWidth = 1.5
+            let zone = box(CGSize(width: 220, height: 136), at: destinations[index], fill: NSColor(red: 0.08, green: 0.15, blue: 0.24, alpha: 1), radius: 14)
+            zone.strokeColor = blue.withAlphaComponent(0.8)
+            zone.lineWidth = 2.5
+            let entry = box(CGSize(width: 86, height: 5), at: CGPoint(x: 0, y: -68), fill: blue, radius: 1)
+            zone.addChild(entry)
             let number = SKLabelNode(text: "\(index + 1)")
             number.fontName = "AvenirNext-Bold"
             number.fontSize = 23
@@ -148,7 +144,7 @@ final class RallyScene: SKScene {
             zone.addChild(number)
             let label = SKLabelNode(text: answer)
             label.fontName = "AvenirNext-DemiBold"
-            label.fontSize = 16
+            label.fontSize = 18
             label.numberOfLines = 3
             label.preferredMaxLayoutWidth = 194
             label.verticalAlignmentMode = .center

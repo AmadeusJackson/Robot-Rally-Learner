@@ -2,38 +2,13 @@ import SwiftUI
 
 struct RobotPortrait: View {
     var body: some View {
-        Canvas { context, size in
-            let scale = min(size.width / 400, size.height / 360)
-            context.translateBy(x: size.width / 2, y: size.height / 2)
-            context.scaleBy(x: scale, y: scale)
-            let orbit = Path(ellipseIn: CGRect(x: -145, y: -145, width: 290, height: 290))
-            context.stroke(orbit, with: .color(RallyStyle.ink.opacity(0.12)), style: StrokeStyle(lineWidth: 1, dash: [4, 8]))
-            context.stroke(Path(ellipseIn: CGRect(x: -180, y: -180, width: 360, height: 360)), with: .color(RallyStyle.ink.opacity(0.06)), lineWidth: 1)
-            context.rotate(by: .degrees(-22))
-            func panel(_ rect: CGRect, _ color: Color, radius: CGFloat = 10) {
-                context.fill(Path(roundedRect: rect, cornerRadius: radius), with: .color(color))
-            }
-            panel(CGRect(x: -68, y: -85, width: 151, height: 196), RallyStyle.ink.opacity(0.08), radius: 30)
-            for x in [-86, 55] {
-                for y in [-70, 30] {
-                    panel(CGRect(x: x, y: y, width: 31, height: 58), RallyStyle.ink, radius: 8)
-                    for line in 0..<5 {
-                        panel(CGRect(x: x + 4, y: y + 6 + line * 10, width: 23, height: 3), .white.opacity(0.20), radius: 1)
-                    }
-                }
-            }
-            panel(CGRect(x: -64, y: -99, width: 128, height: 198), Color(red: 0.98, green: 0.48, blue: 0.24), radius: 26)
-            panel(CGRect(x: -48, y: -8, width: 96, height: 80), Color(red: 0.80, green: 0.29, blue: 0.13), radius: 13)
-            panel(CGRect(x: -45, y: -72, width: 90, height: 32), RallyStyle.ink, radius: 12)
-            for x in [-23, 17] {
-                panel(CGRect(x: x, y: -63, width: 9, height: 13), Color(red: 0.73, green: 0.89, blue: 1), radius: 4)
-            }
-            context.draw(Text("R").font(.custom("AvenirNext-Heavy", size: 45)).foregroundColor(.white), at: CGPoint(x: 0, y: 30))
-            for x in [-47, 47] {
-                for y in [-84, 84] {
-                    context.fill(Path(ellipseIn: CGRect(x: x - 3, y: y - 3, width: 6, height: 6)), with: .color(.white.opacity(0.6)))
-                }
-            }
+        if let url = Bundle.main.url(forResource: "Rover", withExtension: "png"),
+           let image = NSImage(contentsOf: url) {
+            Image(nsImage: image)
+                .resizable().interpolation(.high).scaledToFit()
+                .padding(18)
+                .rotationEffect(.degrees(-16))
+                .shadow(color: RallyStyle.ink.opacity(0.24), radius: 18, x: 10, y: 16)
         }
     }
 }
