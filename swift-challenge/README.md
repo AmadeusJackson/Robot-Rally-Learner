@@ -13,6 +13,8 @@ open '/tmp/robot-rally-swift/Build/Products/Debug/Robot Rally Swift.app'
 
 ## Current milestone
 
+Version 0.4.1 adds a saved appearance preference. Open the keyboard icon in the top-right corner and choose System, Light, or Dark under Appearance. System follows macOS and is the default. The theme covers menus, lesson experiments, answer choices, feedback, and results; the driving arena keeps its dark floor in both themes.
+
 Version 0.4 blends the detailed rover and arena with distinct blue, mint, and purple bays, short success effects, and a native Mac title bar and controls sheet. Practice driving first lets you visit all three bays without affecting lesson scores. Opening Controls pauses driving; resume when ready. Feedback sounds are optional and off by default. Reduce Motion suppresses the arena pulses, sparks, and tire trails as well as interface transitions. Command-R restarts from the lesson and challenge screens.
 
 Version 0.3 gives the driving arena the main window area. The question stays above it and the explanation stays below. Direct selection is available through the Choose directly popover. The floor has panel seams, painted markings, and a raised perimeter rail. A detailed rover sprite replaces the initial geometric robot.

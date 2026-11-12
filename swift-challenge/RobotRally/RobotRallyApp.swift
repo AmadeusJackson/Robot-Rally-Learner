@@ -2,18 +2,41 @@ import SwiftUI
 import SpriteKit
 
 enum RallyStyle {
-    static let paper = Color(red: 0.95, green: 0.94, blue: 0.91)
-    static let ink = Color(red: 0.10, green: 0.15, blue: 0.20)
-    static let muted = Color(red: 0.40, green: 0.44, blue: 0.47)
-    static let orange = Color(red: 0.85, green: 0.30, blue: 0.10)
-    static let blue = Color(red: 0.18, green: 0.34, blue: 0.67)
+    private static func adaptive(_ light: UInt32, _ dark: UInt32) -> Color {
+        Color(nsColor: NSColor(name: nil) { appearance in
+            let rgb = appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua ? dark : light
+            return NSColor(srgbRed: CGFloat((rgb >> 16) & 255) / 255,
+                           green: CGFloat((rgb >> 8) & 255) / 255,
+                           blue: CGFloat(rgb & 255) / 255, alpha: 1)
+        })
+    }
+    static let paper = adaptive(0xF2F0E8, 0x141B23)
+    static let ink = adaptive(0x1A2633, 0xEDF1F5)
+    static let muted = adaptive(0x667078, 0xA9B5C2)
+    static let orange = adaptive(0xD94D1A, 0xFF9866)
+    static let blue = adaptive(0x2E57AB, 0x8DB6FF)
+    static let surface = adaptive(0xFCFBF9, 0x202B37)
+    static let success = adaptive(0x247359, 0x75DEB1)
+}
+
+enum RallyAppearance: String, CaseIterable {
+    case system, light, dark
+    var title: String { rawValue.capitalized }
+    var colorScheme: ColorScheme? {
+        switch self {
+        case .system: nil
+        case .light: .light
+        case .dark: .dark
+        }
+    }
 }
 
 @main
 struct RobotRallyApp: App {
+    @AppStorage("appearance") private var appearance = RallyAppearance.system.rawValue
     var body: some Scene {
         WindowGroup("Robot Rally · Swift Edition") {
-            RallyView().frame(minWidth: 820, minHeight: 660).preferredColorScheme(.light)
+            RallyView().frame(minWidth: 820, minHeight: 660).preferredColorScheme((RallyAppearance(rawValue: appearance) ?? .system).colorScheme)
         }
         .defaultSize(width: 1180, height: 820)
         .windowStyle(.titleBar)
@@ -94,7 +117,7 @@ struct PrimaryButton: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(.system(size: 15, weight: .semibold))
-            .foregroundStyle(.white)
+            .foregroundStyle(RallyStyle.paper)
             .padding(.horizontal, 22).padding(.vertical, 15)
             .background(RallyStyle.ink, in: RoundedRectangle(cornerRadius: 10))
             .opacity(configuration.isPressed ? 0.8 : 1)
@@ -110,6 +133,7 @@ struct RallyView: View {
     }
     @State private var choosingDirectly = false
     @State private var showingControls = false
+    @AppStorage("appearance") private var appearance = RallyAppearance.system.rawValue
     @AppStorage("feedbackSound") private var feedbackSound = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     private let names = ["Force", "Gears", "Energy"]
@@ -165,7 +189,7 @@ struct RallyView: View {
                     }
                     .foregroundStyle(index == session.index ? RallyStyle.ink : RallyStyle.muted.opacity(0.65))
                     .padding(.horizontal, 10).padding(.vertical, 8)
-                    .background(index == session.index ? Color.white : .clear, in: Capsule())
+                    .background(index == session.index ? RallyStyle.surface : .clear, in: Capsule())
                 }
                 Spacer()
                 Button("Restart", systemImage: "arrow.counterclockwise") { session.start() }
@@ -178,8 +202,8 @@ struct RallyView: View {
                 if session.isDriving && !session.paused { session.togglePause() }
                 showingControls = true
             } label: { Image(systemName: "keyboard") }
-            .buttonStyle(.borderless).help("Controls and feedback sounds")
-            .accessibilityLabel("Controls and sound")
+            .buttonStyle(.borderless).help("Appearance, controls, and feedback sounds")
+            .accessibilityLabel("Appearance and controls")
         }
         .padding(.horizontal, 24).padding(.vertical, 16)
     }
@@ -247,7 +271,7 @@ struct RallyView: View {
                 LessonExperiment(index: session.index).id(session.index)
                     .frame(maxWidth: .infinity).frame(minHeight: 340)
             }
-            .padding(28).background(Color.white.opacity(0.75), in: RoundedRectangle(cornerRadius: 18))
+            .padding(28).background(RallyStyle.surface, in: RoundedRectangle(cornerRadius: 18))
         }
     }
 
@@ -280,7 +304,7 @@ struct RallyView: View {
                         Image(systemName: "pause.circle").font(.system(size: 38))
                         Text("Paused").font(.title.bold())
                         Button("Resume driving") { session.togglePause() }
-                            .buttonStyle(.borderedProminent).tint(.white).foregroundStyle(RallyStyle.ink)
+                            .buttonStyle(.borderedProminent).tint(.white).foregroundStyle(Color(red: 0.10, green: 0.15, blue: 0.20))
                             .accessibilityIdentifier("resume-driving")
                     }.foregroundStyle(.white)
                 }
@@ -317,10 +341,10 @@ struct RallyView: View {
                             .font(.system(size: 14, weight: .medium)).fixedSize(horizontal: false, vertical: true)
                         Spacer(minLength: 0)
                         if session.phase == .feedback && option == session.challenge.correct {
-                            Image(systemName: "checkmark.circle.fill").foregroundStyle(Color(red: 0.14, green: 0.45, blue: 0.35))
+                            Image(systemName: "checkmark.circle.fill").foregroundStyle(RallyStyle.success)
                         }
                     }.padding(12).frame(maxWidth: .infinity, alignment: .leading)
-                    .background(Color.white.opacity(0.8), in: RoundedRectangle(cornerRadius: 10))
+                    .background(RallyStyle.surface, in: RoundedRectangle(cornerRadius: 10))
                     .overlay(RoundedRectangle(cornerRadius: 10).stroke(RallyStyle.ink.opacity(0.1), lineWidth: 1))
                     .contentShape(Rectangle())
                 }
@@ -349,7 +373,7 @@ struct RallyView: View {
             } else if session.phase == .feedback {
                 let correct = session.selections.last == session.challenge.correct
                 Image(systemName: correct ? "checkmark.circle.fill" : "arrow.turn.up.right")
-                    .font(.system(size: 28)).foregroundStyle(correct ? Color(red: 0.14, green: 0.45, blue: 0.35) : RallyStyle.orange)
+                    .font(.system(size: 28)).foregroundStyle(correct ? RallyStyle.success : RallyStyle.orange)
                 VStack(alignment: .leading, spacing: 6) {
                     Text(correct ? "You’ve got it." : "Here’s what happens.").font(.system(size: 17, weight: .bold))
                     Text(session.challenge.explanation).font(.system(size: 14)).lineSpacing(3)
@@ -369,12 +393,18 @@ struct RallyView: View {
             }
         }
         .padding(.horizontal, 28).padding(.vertical, 18).frame(maxWidth: .infinity, minHeight: 120)
-        .background(Color.white.opacity(0.7), in: RoundedRectangle(cornerRadius: 14))
+        .background(RallyStyle.surface, in: RoundedRectangle(cornerRadius: 14))
     }
 
     private var controls: some View {
         VStack(alignment: .leading, spacing: 24) {
-            Text("Controls").font(.title2.bold())
+            Text("Appearance & controls").font(.title2.bold())
+            Picker("Appearance", selection: $appearance) {
+                ForEach(RallyAppearance.allCases, id: \.rawValue) { option in
+                    Text(option.title).tag(option.rawValue)
+                }
+            }.pickerStyle(.segmented).accessibilityIdentifier("appearance-control")
+            Divider()
             Grid(alignment: .leading, horizontalSpacing: 36, verticalSpacing: 16) {
                 GridRow { Text("Drive"); Text("WASD · Arrow keys · Left stick").foregroundStyle(.secondary) }
                 GridRow { Text("Continue after answering"); Text("Return · Controller A").foregroundStyle(.secondary) }
@@ -415,7 +445,7 @@ struct RallyView: View {
                     Image(systemName: session.selections[index] == Challenge.sample[index].correct ? "checkmark.circle.fill" : "arrow.counterclockwise.circle")
                         .foregroundStyle(RallyStyle.blue)
                 }.padding(24).frame(maxWidth: .infinity, alignment: .leading)
-                    .background(Color.white.opacity(0.7), in: RoundedRectangle(cornerRadius: 14))
+                    .background(RallyStyle.surface, in: RoundedRectangle(cornerRadius: 14))
             }
             Button { session.start() } label: { Label("Take another lap", systemImage: "arrow.counterclockwise") }
                 .buttonStyle(PrimaryButton()).keyboardShortcut(.defaultAction)

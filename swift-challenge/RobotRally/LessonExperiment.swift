@@ -8,7 +8,7 @@ struct RobotPortrait: View {
                 .resizable().interpolation(.high).scaledToFit()
                 .padding(18)
                 .rotationEffect(.degrees(-16))
-                .shadow(color: RallyStyle.ink.opacity(0.24), radius: 18, x: 10, y: 16)
+                .shadow(color: Color.black.opacity(0.24), radius: 18, x: 10, y: 16)
         }
     }
 }
