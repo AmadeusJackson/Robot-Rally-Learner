@@ -5,6 +5,11 @@ import GameController
 
 @MainActor
 final class RallyScene: SKScene {
+    var onPracticeVisit: ((Int) -> Void)?
+    var reduceMotion = false
+    var soundEnabled = false
+    private var practiceMode = false
+    private var visited = Set<Int>()
     var onAnswer: ((Int) -> Void)?
     var onPrimary: (() -> Void)?
     var onPause: (() -> Void)?
@@ -127,19 +132,22 @@ final class RallyScene: SKScene {
         addChild(robot)
     }
 
-    func configure(answers: [String]) {
+    func configure(answers: [String], practice: Bool = false) {
+        practiceMode = practice
+        visited.removeAll()
         bays.removeAllChildren()
         zones.removeAll()
         for (index, answer) in answers.enumerated() {
             let zone = box(CGSize(width: 220, height: 136), at: destinations[index], fill: NSColor(red: 0.08, green: 0.15, blue: 0.24, alpha: 1), radius: 14)
-            zone.strokeColor = blue.withAlphaComponent(0.8)
+            let bayColor: NSColor = [blue, .systemMint, .systemPurple][index]
+            zone.strokeColor = bayColor.withAlphaComponent(0.8)
             zone.lineWidth = 2.5
-            let entry = box(CGSize(width: 86, height: 5), at: CGPoint(x: 0, y: -68), fill: blue, radius: 1)
+            let entry = box(CGSize(width: 86, height: 5), at: CGPoint(x: 0, y: -68), fill: bayColor, radius: 1)
             zone.addChild(entry)
             let number = SKLabelNode(text: "\(index + 1)")
             number.fontName = "AvenirNext-Bold"
             number.fontSize = 23
-            number.fontColor = blue
+            number.fontColor = bayColor
             number.position.y = 33
             zone.addChild(number)
             let label = SKLabelNode(text: answer)
@@ -160,7 +168,7 @@ final class RallyScene: SKScene {
         robot.zRotation = 0
         robot.removeAllActions()
         clearInput()
-        instruction.text = "DRIVE INTO AN ANSWER BAY"
+        instruction.text = practiceMode ? "EXPLORE ALL THREE BAYS" : "DRIVE INTO AN ANSWER BAY"
     }
 
     func showResult(selected: Int, correct: Int) {
@@ -169,13 +177,30 @@ final class RallyScene: SKScene {
             zone.strokeColor = color
             zone.fillColor = color.withAlphaComponent(index == correct ? 0.22 : 0.08)
         }
+        feedback(at: robot.position, correct: selected == correct)
+        instruction.text = selected == correct ? "ANSWER COLLECTED" : "CHECK THE EXPLANATION, THEN KEEP GOING"
+    }
+
+    private func feedback(at point: CGPoint, correct: Bool) {
+        if soundEnabled { NSSound(named: correct ? "Glass" : "Pop")?.play() }
+        guard !reduceMotion else { return }
+        let color: NSColor = correct ? .systemMint : amber
         let pulse = SKShapeNode(circleOfRadius: 32)
-        pulse.position = robot.position
-        pulse.strokeColor = selected == correct ? .systemMint : amber
+        pulse.position = point
+        pulse.strokeColor = color
         pulse.lineWidth = 3
+        pulse.zPosition = 5
         addChild(pulse)
         pulse.run(.sequence([.group([.scale(to: 2.8, duration: 0.55), .fadeOut(withDuration: 0.55)]), .removeFromParent()]))
-        instruction.text = selected == correct ? "ANSWER COLLECTED" : "CHECK THE EXPLANATION, THEN KEEP GOING"
+        guard correct else { return }
+        for index in 0..<12 {
+            let angle = CGFloat(index) * .pi / 6
+            let spark = box(CGSize(width: 4, height: 9), at: point, fill: color, radius: 2)
+            spark.zPosition = 5
+            spark.zRotation = angle
+            addChild(spark)
+            spark.run(.sequence([.group([.moveBy(x: cos(angle) * 85, y: sin(angle) * 85, duration: 0.45), .fadeOut(withDuration: 0.45)]), .removeFromParent()]))
+        }
     }
 
     func clearInput() {
@@ -235,7 +260,7 @@ final class RallyScene: SKScene {
             robot.zRotation += difference * min(1, delta * 15)
         }
         trailTime += delta
-        if hypot(velocity.dx, velocity.dy) > 50 && trailTime > 0.08 {
+        if !reduceMotion && hypot(velocity.dx, velocity.dy) > 50 && trailTime > 0.08 {
             trailTime = 0
             for x: CGFloat in [-24, 24] {
                 let track = box(CGSize(width: 7, height: 9), at: chassis.convert(CGPoint(x: x, y: -20), to: self), fill: .black.withAlphaComponent(0.20), radius: 2)
@@ -247,7 +272,12 @@ final class RallyScene: SKScene {
         }
         let target = destinations.firstIndex { abs(robot.position.x - $0.x) < 94 && abs(robot.position.y - $0.y) < 54 }
         if target != hovering { dwell = 0; hovering = target }
-        guard let target else { progress.path = nil; instruction.text = "DRIVE INTO AN ANSWER BAY"; return }
+        guard let target else { progress.path = nil; instruction.text = practiceMode ? "EXPLORE ALL THREE BAYS" : "DRIVE INTO AN ANSWER BAY"; return }
+        if practiceMode && visited.contains(target) {
+            progress.path = nil
+            instruction.text = "BAY REACHED — TRY ANOTHER"
+            return
+        }
         dwell += delta
         instruction.text = "HOLD IN THE BAY TO CHOOSE"
         let path = CGMutablePath()
@@ -255,8 +285,16 @@ final class RallyScene: SKScene {
         progress.path = path
         progress.position = robot.position
         if dwell >= 0.45 {
-            enabled = false
-            onAnswer?(target)
+            if practiceMode {
+                visited.insert(target)
+                zones[target].fillColor = NSColor.systemMint.withAlphaComponent(0.25)
+                feedback(at: robot.position, correct: true)
+                progress.path = nil
+                onPracticeVisit?(visited.count)
+            } else {
+                enabled = false
+                onAnswer?(target)
+            }
         }
     }
 }
