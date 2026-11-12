@@ -27,8 +27,7 @@ final class RallyScene: SKScene {
     private var hovering: Int?
     private var dwell: TimeInterval = 0
     private var trailTime: TimeInterval = 0
-    private var aHeld = false
-    private var bHeld = false
+    var controllerMotion = CGVector.zero
     private let progress = SKShapeNode()
     private let instruction = SKLabelNode(fontNamed: "AvenirNext-Medium")
 
@@ -204,6 +203,7 @@ final class RallyScene: SKScene {
     }
 
     func clearInput() {
+        controllerMotion = .zero
         keys.removeAll()
         velocity = .zero
         lastTime = 0
@@ -218,13 +218,6 @@ final class RallyScene: SKScene {
         let delta = lastTime == 0 ? 0 : min(currentTime - lastTime, 0.04)
         lastTime = currentTime
         guard NSApp.isActive else { clearInput(); return }
-        let pad = GCController.controllers().first?.extendedGamepad
-        let a = pad?.buttonA.isPressed ?? false
-        let b = pad?.buttonB.isPressed ?? false
-        if a && !aHeld { onPrimary?() }
-        if b && !bHeld { onPause?() }
-        aHeld = a
-        bHeld = b
         guard enabled else { return }
         var dx: CGFloat = 0
         var dy: CGFloat = 0
@@ -232,14 +225,8 @@ final class RallyScene: SKScene {
         if keys.contains(2) || keys.contains(124) { dx += 1 }
         if keys.contains(13) || keys.contains(126) { dy += 1 }
         if keys.contains(1) || keys.contains(125) { dy -= 1 }
-        if let pad {
-            let x = CGFloat(pad.leftThumbstick.xAxis.value)
-            let y = CGFloat(pad.leftThumbstick.yAxis.value)
-            if abs(x) > 0.18 { dx += x }
-            if abs(y) > 0.18 { dy += y }
-            dx += CGFloat(pad.dpad.xAxis.value)
-            dy += CGFloat(pad.dpad.yAxis.value)
-        }
+        dx += controllerMotion.dx
+        dy += controllerMotion.dy
         move(delta: delta, horizontal: dx, vertical: dy)
     }
 
