@@ -13,6 +13,8 @@ open '/tmp/robot-rally-swift/Build/Products/Debug/Robot Rally Swift.app'
 
 ## Current milestone
 
+Version 0.6.1 supports windows down to 640 × 560 points. Narrow windows use a compact header and stacked home, lesson, and feedback layouts. The arena fits its available width and height without stretching. Short windows scroll rather than clip gameplay controls; controller focus scrolls the selected action into view. Settings fit the parent window and scroll when needed. Feedback height depends on window width, not whether an answer was correct.
+
 Version 0.6 carries the competition-rover design through the app: a graphite pit-station home screen, numbered training cards, responsive pit briefings, instrument-style bench-test readouts, and a carpet-textured field with metal rails and orange answer bays. Match review labels each result as Correct or Review. Light and dark themes share the same layout; narrow windows stack the briefing and bench test with controller-aware scrolling. Driving physics, answer dwell timing, and the fixed-height feedback region are unchanged.
 
 Version 0.5.2 replaces the flat rover symbol with a detailed competition-robot illustration based on the actual game rover. It shows machined aluminum rails, black mecanum rollers, electronics, and padded orange bumpers on a steel-blue tile. The foreground is a transparent PNG in Icon Composer, with native default, dark, clear, and tinted exports. See [Design/ICON-REVIEW.md](Design/ICON-REVIEW.md) for previews, tradeoffs, and AI-assistance provenance.

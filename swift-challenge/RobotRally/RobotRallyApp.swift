@@ -45,7 +45,7 @@ enum RallyAppearance: String, CaseIterable {
 struct RobotRallyApp: App {
     var body: some Scene {
         WindowGroup("Robot Rally · Swift Edition") {
-            RallyView().frame(minWidth: 820, minHeight: 660)
+            RallyView().frame(minWidth: 640, minHeight: 560)
         }
         .defaultSize(width: 1180, height: 820)
         .windowStyle(.titleBar)
@@ -97,21 +97,32 @@ struct RallyContent: View {
     var body: some View {
         GeometryReader { geometry in
             VStack(spacing: 0) {
-                header
+                header(compact: geometry.size.width < 850)
                 Rectangle().fill(style.ink.opacity(0.12)).frame(height: 1)
                 if session.isDriving || session.phase == .feedback {
-                    game
+                    GeometryReader { gameSpace in
+                        ScrollViewReader { proxy in
+                        ScrollView(.vertical) {
+                            game(compact: geometry.size.width < 850)
+                                .frame(height: max(gameSpace.size.height, geometry.size.width < 850 ? 570 : 550))
+                        }
+                        .scrollBounceBehavior(.basedOnSize)
+                        .onChange(of: session.focus) { _, target in
+                            if session.controllerUsed { proxy.scrollTo(target, anchor: .center) }
+                        }
+                        }
+                    }
                 } else {
                 ScrollViewReader { proxy in
                 ScrollView {
                     Group {
                         switch session.phase {
-                        case .welcome: welcome(compact: geometry.size.width < 980)
+                        case .welcome: welcome(compact: geometry.size.width < 980, narrow: geometry.size.width < 740)
                         case .results: results
                         default: lesson(compact: geometry.size.width < 980)
                         }
                     }
-                    .padding(geometry.size.width < 1000 ? 24 : 36)
+                    .padding(geometry.size.width < 740 ? 16 : geometry.size.width < 1000 ? 24 : 36)
                     .frame(maxWidth: 1400)
                     .frame(maxWidth: .infinity)
                 }
@@ -123,7 +134,8 @@ struct RallyContent: View {
                 if session.controllerConnected {
                     Text(session.controllerHint)
                         .font(.system(size: 11, weight: .medium)).foregroundStyle(style.muted)
-                        .padding(.vertical, 7).frame(maxWidth: .infinity)
+                        .multilineTextAlignment(.center).fixedSize(horizontal: false, vertical: true)
+                        .padding(.horizontal, 12).padding(.vertical, 7).frame(maxWidth: .infinity)
                         .background(style.paper)
                 }
             }
@@ -133,7 +145,15 @@ struct RallyContent: View {
             .onChange(of: reduceMotion, initial: true) { _, value in session.scene.reduceMotion = value }
 
             .sheet(isPresented: $session.showingControls, onDismiss: { session.closeControls() }) {
-                controls.environment(\.rallyStyle, style).environment(\.colorScheme, colorScheme)
+                ScrollViewReader { proxy in
+                    ScrollView { controls }
+                        .onChange(of: session.focus) { _, target in
+                            if session.controllerUsed { proxy.scrollTo(target, anchor: .center) }
+                        }
+                    }
+                    .frame(width: min(500, geometry.size.width - 40), height: min(620, geometry.size.height - 40))
+                    .background(style.paper)
+                    .environment(\.rallyStyle, style).environment(\.colorScheme, colorScheme)
                     .background(RallyWindowBridge(session: session, isModal: true))
                     .preferredColorScheme(session.appearance.colorScheme)
             }
@@ -144,7 +164,7 @@ struct RallyContent: View {
         }
     }
 
-    private var header: some View {
+    private func header(compact: Bool) -> some View {
         HStack(spacing: 14) {
             Image(systemName: "gearshape.2.fill").font(.system(size: 24, weight: .medium)).foregroundStyle(style.orange)
             Text("ROBOT RALLY").font(.custom("AvenirNext-Heavy", size: 17)).tracking(1)
@@ -156,8 +176,9 @@ struct RallyContent: View {
                 ForEach(0..<3) { index in
                     HStack(spacing: 6) {
                         Image(systemName: index < session.index ? "checkmark.circle.fill" : icons[index])
-                        Text(names[index]).font(.system(size: 12, weight: .semibold))
+                        if !compact { Text(names[index]).font(.system(size: 12, weight: .semibold)) }
                     }
+                    .accessibilityLabel(names[index])
                     .foregroundStyle(index == session.index ? style.ink : style.muted.opacity(0.65))
                     .padding(.horizontal, 10).padding(.vertical, 8)
                     .background(index == session.index ? style.surface : .clear, in: Capsule())
@@ -183,9 +204,10 @@ struct RallyContent: View {
         .padding(.horizontal, 24).padding(.vertical, 16)
     }
 
-    private func welcome(compact: Bool) -> some View {
+    private func welcome(compact: Bool, narrow: Bool) -> some View {
         VStack(alignment: .leading, spacing: 24) {
-            HStack(spacing: 12) {
+            let heroLayout = narrow ? AnyLayout(VStackLayout(alignment: .leading, spacing: 18)) : AnyLayout(HStackLayout(spacing: 12))
+            heroLayout {
                 VStack(alignment: .leading, spacing: 20) {
                     Text("ROBOTICS / FIELD LAB").font(.system(size: 11, weight: .semibold, design: .monospaced)).tracking(2).foregroundStyle(.white.opacity(0.6))
                     Text("Built in the pits.\nProven on the field.")
@@ -202,7 +224,7 @@ struct RallyContent: View {
                         .buttonStyle(.plain).font(.system(size: 13, weight: .semibold)).foregroundStyle(.white.opacity(0.85))
                         .accessibilityIdentifier("practice-driving").controllerFocus(.practice, session: session)
                 }.frame(maxWidth: .infinity, alignment: .leading)
-                RobotDisplay().frame(maxWidth: .infinity).frame(height: compact ? 300 : 350)
+                RobotDisplay().frame(maxWidth: .infinity).frame(height: narrow ? 240 : compact ? 300 : 350)
             }
             .padding(compact ? 24 : 34).foregroundStyle(.white)
             .background(Color(red: 0.10, green: 0.14, blue: 0.18), in: RoundedRectangle(cornerRadius: 12))
@@ -211,7 +233,8 @@ struct RallyContent: View {
                 Spacer()
                 Text("03 BRIEFINGS  /  03 FIELD CHALLENGES").font(.system(size: 10, design: .monospaced)).foregroundStyle(style.muted)
             }
-            HStack(alignment: .top, spacing: 14) {
+            let topicLayout = narrow ? AnyLayout(VStackLayout(alignment: .leading, spacing: 14)) : AnyLayout(HStackLayout(alignment: .top, spacing: 14))
+            topicLayout {
                 topic("Force & motion", number: "01", icon: icons[0], text: "Find the force that gets your robot moving.")
                 topic("Gears & torque", number: "02", icon: icons[1], text: "Trade output speed for turning strength.")
                 topic("Energy & runtime", number: "03", icon: icons[2], text: "Plan a run around the energy available.")
@@ -268,7 +291,7 @@ struct RallyContent: View {
         }
     }
 
-    private var game: some View {
+    private func game(compact: Bool) -> some View {
         VStack(spacing: 0) {
             HStack(alignment: .center, spacing: 28) {
                 VStack(alignment: .leading, spacing: 5) {
@@ -286,10 +309,11 @@ struct RallyContent: View {
                     .disabled(!session.isDriving)
                     .accessibilityIdentifier("pause-driving")
             }.padding(.horizontal, 28).padding(.vertical, 18)
+            GeometryReader { arena in
             ZStack {
+                let width = min(arena.size.width, arena.size.height * 840 / 520)
                 FieldView(scene: session.scene, active: session.isDriving && !session.paused)
-                    .aspectRatio(840.0 / 520.0, contentMode: .fit)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .frame(width: width, height: width * 520 / 840)
                     .accessibilityLabel("Driving arena. Choose an answer by driving or use Choose directly below.")
                 if session.paused {
                     Color.black.opacity(0.65)
@@ -302,6 +326,8 @@ struct RallyContent: View {
                         .controllerFocus(.resume, session: session)
                     }.foregroundStyle(.white)
                 }
+            }
+            .frame(width: arena.size.width, height: arena.size.height)
             }
             HStack {
                 Label("WASD / arrows / left stick", systemImage: "gamecontroller")
@@ -320,7 +346,7 @@ struct RallyContent: View {
             }
             .foregroundStyle(.white.opacity(0.65)).font(.system(size: 12))
             .padding(.horizontal, 28).padding(.vertical, 12)
-            feedback.frame(height: 132).background(style.paper)
+            feedback(compact: compact).frame(height: compact ? 190 : 132).background(style.paper)
         }
         .background(Color(red: 0.075, green: 0.11, blue: 0.17))
     }
@@ -353,11 +379,13 @@ struct RallyContent: View {
         }.foregroundStyle(style.ink)
     }
 
-    private var feedback: some View {
-        HStack(alignment: .center, spacing: 22) {
+    @ViewBuilder
+    private func feedback(compact: Bool) -> some View {
+        let layout = compact ? AnyLayout(VStackLayout(alignment: .leading, spacing: 10)) : AnyLayout(HStackLayout(alignment: .center, spacing: 22))
+        layout {
             if session.phase == .practice {
-                Image(systemName: session.practiceVisits == 3 ? "checkmark.circle.fill" : "steeringwheel")
-                    .font(.system(size: 28)).foregroundStyle(style.orange)
+                if !compact { Image(systemName: session.practiceVisits == 3 ? "checkmark.circle.fill" : "steeringwheel")
+                    .font(.system(size: 28)).foregroundStyle(style.orange) }
                 VStack(alignment: .leading, spacing: 6) {
                     Text(session.practiceVisits == 3 ? "Ready for the rally." : "\(session.practiceVisits) of 3 bays reached")
                         .font(.system(size: 17, weight: .bold))
@@ -371,8 +399,8 @@ struct RallyContent: View {
                         .controllerFocus(.start, session: session)
             } else if session.phase == .feedback {
                 let correct = session.selections.last == session.challenge.correct
-                Image(systemName: correct ? "checkmark.circle.fill" : "arrow.turn.up.right")
-                    .font(.system(size: 28)).foregroundStyle(correct ? style.success : style.orange)
+                if !compact { Image(systemName: correct ? "checkmark.circle.fill" : "arrow.turn.up.right")
+                    .font(.system(size: 28)).foregroundStyle(correct ? style.success : style.orange) }
                 VStack(alignment: .leading, spacing: 6) {
                     Text(correct ? "You’ve got it." : "Here’s what happens.").font(.system(size: 17, weight: .bold))
                     Text(session.challenge.explanation).font(.system(size: 14)).lineSpacing(3)
@@ -383,7 +411,7 @@ struct RallyContent: View {
                     .accessibilityIdentifier("next-lesson")
                         .controllerFocus(.next, session: session)
             } else {
-                Image(systemName: "steeringwheel").font(.system(size: 28)).foregroundStyle(style.orange)
+                if !compact { Image(systemName: "steeringwheel").font(.system(size: 28)).foregroundStyle(style.orange) }
                 VStack(alignment: .leading, spacing: 6) {
                     Text("Drive to your answer").font(.system(size: 17, weight: .bold))
                     Text("Hold in a bay briefly to confirm your choice. The ring around your robot shows your progress.")
@@ -427,7 +455,7 @@ struct RallyContent: View {
                 Text("↑↓ Move   ←→ Adjust   A Select   B Back")
                     .font(.caption).foregroundStyle(style.muted)
             }
-        }.padding(28).frame(width: 500)
+        }.padding(28).frame(maxWidth: .infinity, alignment: .leading)
             .foregroundStyle(style.ink).background(style.paper)
     }
 
