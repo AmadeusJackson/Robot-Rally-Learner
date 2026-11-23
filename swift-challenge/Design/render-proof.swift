@@ -13,7 +13,7 @@ func icon(_ rendition: String, _ sourceSize: Int, x: CGFloat, y: CGFloat, size: 
     NSImage(contentsOf: folder.appendingPathComponent("\(rendition)-\(sourceSize).png"))!.draw(in: NSRect(x: x, y: y, width: size, height: size))
 }
 text("ROBOT RALLY  /  NATIVE ICON PROOFS", 28, 716, size: 24)
-text("Apple Icon Composer renders · macOS · same vector geometry in every appearance", 28, 687)
+text("Apple Icon Composer renders · macOS · same competition rover in every appearance", 28, 687)
 let variants = ["Default", "Dark", "ClearLight", "ClearDark", "TintedLight", "TintedDark"]
 for (i, variant) in variants.enumerated() {
     let x = CGFloat(28 + i * 162)
@@ -37,7 +37,7 @@ for (row, variant) in ["Default", "Dark"].enumerated() {
         x += CGFloat(size + 20)
     }
 }
-text("Original vector artwork · no embedded typography, raster texture, baked lighting, or corner mask", 28, 64, size: 15)
-text("Native light, dark, clear, and tinted renders. The system supplies the material and outer shape.", 28, 37, size: 14)
+text("Reference-based rover illustration · metal chassis, rubber rollers, and orange fabric bumpers", 28, 64, size: 15)
+text("Native light, dark, clear, and tinted renders. The system supplies the background finish and outer shape.", 28, 37, size: 14)
 NSGraphicsContext.restoreGraphicsState()
 try bitmap.representation(using: .png, properties: [:])!.write(to: folder.appendingPathComponent("icon-proof-sheet.png"))
