@@ -13,6 +13,8 @@ open '/tmp/robot-rally-swift/Build/Products/Debug/Robot Rally Swift.app'
 
 ## Current milestone
 
+Version 0.5.1 adds an original layered rover app icon. It includes consistent default, dark, clear, and tinted appearances and uses Apple's system-rendered materials. The Xcode target includes `RobotRally/AppIcon.icon`; compatibility images are generated during the build. The editable vector source, export commands, design review, and authorship record are in [Design/ICON-REVIEW.md](Design/ICON-REVIEW.md). Dock and Finder appearance is controlled by macOS, separately from the app's theme switcher.
+
 Version 0.5 moves controller input out of the arena so it works throughout the app. The selected control has an orange outline, and focused lesson controls and result cards scroll into view. Settings and direct-answer selection stop the robot. Disconnecting the controller or leaving the app pauses driving. Held buttons cannot skip screens, and held steering input must return to neutral before navigating a new screen.
 
 The appearance switcher now updates the actual SwiftUI palette and native window appearance immediately, including the settings sheet. It preserves the current lesson and experiment values and saves the preference for the next launch.

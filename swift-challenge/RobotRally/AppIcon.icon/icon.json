@@ -1,0 +1,186 @@
+{
+  "fill-specializations": [
+    {
+      "value": {
+        "solid": "srgb:0.56863,0.69020,0.74902,1.00000"
+      }
+    },
+    {
+      "appearance": "dark",
+      "value": {
+        "solid": "srgb:0.16863,0.26275,0.33333,1.00000"
+      }
+    }
+  ],
+  "groups": [
+    {
+      "name": "Electronics",
+      "layers": [
+        {
+          "image-name": "07-sensor.svg",
+          "name": "07-sensor",
+          "fill-specializations": [
+            {
+              "value": "automatic"
+            },
+            {
+              "appearance": "dark",
+              "value": {
+                "solid": "srgb:0.14118,0.24314,0.31765,1.00000"
+              }
+            }
+          ],
+          "glass": true,
+          "opacity": 1
+        },
+        {
+          "image-name": "06-core.svg",
+          "name": "06-core",
+          "fill-specializations": [
+            {
+              "value": "automatic"
+            },
+            {
+              "appearance": "dark",
+              "value": {
+                "solid": "srgb:0.14118,0.24314,0.31765,1.00000"
+              }
+            }
+          ],
+          "glass": true,
+          "opacity": 1
+        },
+        {
+          "image-name": "05-controller.svg",
+          "name": "05-controller",
+          "fill-specializations": [
+            {
+              "value": "automatic"
+            },
+            {
+              "appearance": "dark",
+              "value": {
+                "solid": "srgb:0.32157,0.59608,0.74510,1.00000"
+              }
+            }
+          ],
+          "glass": true,
+          "opacity": 1
+        }
+      ],
+      "lighting": "individual",
+      "specular": true,
+      "shadow": {
+        "kind": "neutral",
+        "opacity": 0.22
+      },
+      "translucency": {
+        "enabled": false,
+        "value": 0
+      }
+    },
+    {
+      "name": "Chassis and bumpers",
+      "layers": [
+        {
+          "image-name": "04-bumpers.svg",
+          "name": "04-bumpers",
+          "fill-specializations": [
+            {
+              "value": "automatic"
+            },
+            {
+              "appearance": "dark",
+              "value": {
+                "solid": "srgb:0.84314,0.48235,0.26275,1.00000"
+              }
+            }
+          ],
+          "glass": true,
+          "opacity": 1
+        },
+        {
+          "image-name": "03-chassis.svg",
+          "name": "03-chassis",
+          "fill-specializations": [
+            {
+              "value": "automatic"
+            },
+            {
+              "appearance": "dark",
+              "value": {
+                "solid": "srgb:0.75686,0.81176,0.83137,1.00000"
+              }
+            }
+          ],
+          "glass": true,
+          "opacity": 1
+        }
+      ],
+      "lighting": "individual",
+      "specular": true,
+      "shadow": {
+        "kind": "neutral",
+        "opacity": 0.22
+      },
+      "translucency": {
+        "enabled": false,
+        "value": 0
+      }
+    },
+    {
+      "name": "Mecanum running gear",
+      "layers": [
+        {
+          "image-name": "02-rollers.svg",
+          "name": "02-rollers",
+          "fill-specializations": [
+            {
+              "value": "automatic"
+            },
+            {
+              "appearance": "dark",
+              "value": {
+                "solid": "srgb:0.80784,0.85098,0.86667,1.00000"
+              }
+            }
+          ],
+          "glass": true,
+          "opacity": 1
+        },
+        {
+          "image-name": "01-tires.svg",
+          "name": "01-tires",
+          "fill-specializations": [
+            {
+              "value": "automatic"
+            },
+            {
+              "appearance": "dark",
+              "value": {
+                "solid": "srgb:0.40784,0.51373,0.58431,1.00000"
+              }
+            }
+          ],
+          "glass": true,
+          "opacity": 1
+        }
+      ],
+      "lighting": "individual",
+      "specular": false,
+      "shadow": {
+        "kind": "neutral",
+        "opacity": 0.22
+      },
+      "translucency": {
+        "enabled": false,
+        "value": 0
+      }
+    }
+  ],
+  "supported-platforms": {
+    "squares": [
+      "macOS"
+    ]
+  }
+}
