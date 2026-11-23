@@ -10,12 +10,12 @@ struct RallyStyle {
                      green: Double((rgb >> 8) & 255) / 255,
                      blue: Double(rgb & 255) / 255, opacity: 1)
     }
-    var paper: Color { adaptive(0xF2F0E8, 0x141B23) }
+    var paper: Color { adaptive(0xEDF0F2, 0x141B23) }
     var ink: Color { adaptive(0x1A2633, 0xEDF1F5) }
     var muted: Color { adaptive(0x667078, 0xA9B5C2) }
     var orange: Color { adaptive(0xD94D1A, 0xFF9866) }
     var blue: Color { adaptive(0x2E57AB, 0x8DB6FF) }
-    var surface: Color { adaptive(0xFCFBF9, 0x202B37) }
+    var surface: Color { adaptive(0xFAFBFC, 0x202B37) }
     var success: Color { adaptive(0x247359, 0x75DEB1) }
 }
 
@@ -58,9 +58,9 @@ struct PrimaryButton: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(.system(size: 15, weight: .semibold))
-            .foregroundStyle(style.paper)
+            .foregroundStyle(Color(red: 0.12, green: 0.15, blue: 0.18))
             .padding(.horizontal, 22).padding(.vertical, 15)
-            .background(style.ink, in: RoundedRectangle(cornerRadius: 10))
+            .background(Color(red: 1, green: 0.57, blue: 0.30), in: RoundedRectangle(cornerRadius: 6))
             .opacity(configuration.isPressed ? 0.8 : 1)
             .scaleEffect(configuration.isPressed ? 0.98 : 1)
     }
@@ -106,9 +106,9 @@ struct RallyContent: View {
                 ScrollView {
                     Group {
                         switch session.phase {
-                        case .welcome: welcome
+                        case .welcome: welcome(compact: geometry.size.width < 980)
                         case .results: results
-                        default: lesson
+                        default: lesson(compact: geometry.size.width < 980)
                         }
                     }
                     .padding(geometry.size.width < 1000 ? 24 : 36)
@@ -146,7 +146,7 @@ struct RallyContent: View {
 
     private var header: some View {
         HStack(spacing: 14) {
-            Image(systemName: "steeringwheel").font(.system(size: 26, weight: .medium)).foregroundStyle(style.orange)
+            Image(systemName: "gearshape.2.fill").font(.system(size: 24, weight: .medium)).foregroundStyle(style.orange)
             Text("ROBOT RALLY").font(.custom("AvenirNext-Heavy", size: 17)).tracking(1)
             Spacer()
             if session.phase == .practice {
@@ -168,14 +168,14 @@ struct RallyContent: View {
                     .buttonStyle(.plain).font(.system(size: 12)).foregroundStyle(style.muted)
                     .controllerFocus(.restart, session: session)
             } else {
-                Text("THE ROBOTICS LAB").font(.system(size: 11, weight: .medium, design: .monospaced)).tracking(1.5).foregroundStyle(style.muted)
+                Text("PIT • TEST • DRIVE").font(.system(size: 11, weight: .medium, design: .monospaced)).tracking(1.5).foregroundStyle(style.muted)
             }
             if session.phase != .welcome {
                 Button { session.home() } label: { Image(systemName: "house") }
                     .buttonStyle(.borderless).help("Return home").accessibilityLabel("Home")
                     .controllerFocus(.home, session: session)
             }
-            Button { session.openControls() } label: { Image(systemName: "keyboard") }
+            Button { session.openControls() } label: { Image(systemName: "slider.horizontal.3") }
             .buttonStyle(.borderless).help("Appearance, controls, and feedback sounds")
             .accessibilityLabel("Appearance and controls")
             .controllerFocus(.settings, session: session)
@@ -183,74 +183,88 @@ struct RallyContent: View {
         .padding(.horizontal, 24).padding(.vertical, 16)
     }
 
-    private var welcome: some View {
-        VStack(alignment: .leading, spacing: 32) {
-            HStack(spacing: 24) {
-                VStack(alignment: .leading, spacing: 22) {
-                    Text("Put physics\nin the driver’s seat.")
-                        .font(.custom("AvenirNext-Heavy", size: 47))
-                        .lineSpacing(-4).fixedSize(horizontal: false, vertical: true)
-                    Text("Meet your robot. Explore what makes it move.\nThen take what you’ve learned onto the field.")
-                        .font(.system(size: 17)).lineSpacing(5).foregroundStyle(style.muted)
+    private func welcome(compact: Bool) -> some View {
+        VStack(alignment: .leading, spacing: 24) {
+            HStack(spacing: 12) {
+                VStack(alignment: .leading, spacing: 20) {
+                    Text("ROBOTICS / FIELD LAB").font(.system(size: 11, weight: .semibold, design: .monospaced)).tracking(2).foregroundStyle(.white.opacity(0.6))
+                    Text("Built in the pits.\nProven on the field.")
+                        .font(.system(size: compact ? 34 : 46, weight: .heavy)).fontWidth(.condensed)
+                        .fixedSize(horizontal: false, vertical: true)
+                    Text("Explore the mechanics. Test your setup.\nPut your understanding behind the wheel.")
+                        .font(.system(size: 15)).lineSpacing(5).foregroundStyle(.white.opacity(0.7))
                     Button { session.start() } label: {
-                        HStack(spacing: 20) { Text("Enter the lab"); Image(systemName: "arrow.right") }
+                        HStack(spacing: 24) { Text("Start training"); Image(systemName: "arrow.right") }
                     }
                     .buttonStyle(PrimaryButton()).keyboardShortcut(.defaultAction)
-                    .accessibilityIdentifier("start-learning")
-                        .controllerFocus(.start, session: session)
-                    Button("Practice driving first") { session.practice() }
-                        .buttonStyle(.link).foregroundStyle(style.blue)
-                        .accessibilityIdentifier("practice-driving")
-                        .controllerFocus(.practice, session: session)
-                    Text("3 short challenges  /  About 3 minutes")
-                        .font(.system(size: 11, design: .monospaced)).foregroundStyle(style.muted)
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                RobotPortrait().frame(maxWidth: .infinity).frame(height: 360)
-                    .accessibilityLabel("Competition rover with mecanum wheels and orange bumpers")
+                    .accessibilityIdentifier("start-learning").controllerFocus(.start, session: session)
+                    Button("Practice driving first →") { session.practice() }
+                        .buttonStyle(.plain).font(.system(size: 13, weight: .semibold)).foregroundStyle(.white.opacity(0.85))
+                        .accessibilityIdentifier("practice-driving").controllerFocus(.practice, session: session)
+                }.frame(maxWidth: .infinity, alignment: .leading)
+                RobotDisplay().frame(maxWidth: .infinity).frame(height: compact ? 300 : 350)
             }
-            Rectangle().fill(style.ink.opacity(0.15)).frame(height: 1)
-            HStack(alignment: .top, spacing: 30) {
-                topic("Force & motion", icon: icons[0], text: "What changes when your robot pushes harder?")
-                topic("Gears & torque", icon: icons[1], text: "Trade speed for the strength to turn.")
-                topic("Energy & runtime", icon: icons[2], text: "Find out how long your battery can last.")
+            .padding(compact ? 24 : 34).foregroundStyle(.white)
+            .background(Color(red: 0.10, green: 0.14, blue: 0.18), in: RoundedRectangle(cornerRadius: 12))
+            HStack {
+                Text("TRAINING PROGRAM").font(.system(size: 11, weight: .bold, design: .monospaced)).tracking(1.5)
+                Spacer()
+                Text("03 BRIEFINGS  /  03 FIELD CHALLENGES").font(.system(size: 10, design: .monospaced)).foregroundStyle(style.muted)
+            }
+            HStack(alignment: .top, spacing: 14) {
+                topic("Force & motion", number: "01", icon: icons[0], text: "Find the force that gets your robot moving.")
+                topic("Gears & torque", number: "02", icon: icons[1], text: "Trade output speed for turning strength.")
+                topic("Energy & runtime", number: "03", icon: icons[2], text: "Plan a run around the energy available.")
             }
             HStack {
-                Label("Keyboard or controller", systemImage: "gamecontroller")
+                Label("Keyboard or Xbox controller", systemImage: "gamecontroller")
                 Spacer()
-                Label("Ready to play offline", systemImage: "checkmark.circle")
-            }
-            .font(.system(size: 12)).foregroundStyle(style.muted)
+                Label("Offline and ready", systemImage: "checkmark.circle.fill")
+            }.font(.system(size: 12)).foregroundStyle(style.muted)
         }
     }
 
-    private func topic(_ title: String, icon: String, text: String) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Image(systemName: icon).font(.system(size: 22)).foregroundStyle(style.orange)
-            Text(title).font(.custom("AvenirNext-DemiBold", size: 18))
-            Text(text).font(.system(size: 14)).foregroundStyle(style.muted).fixedSize(horizontal: false, vertical: true)
-        }.frame(maxWidth: .infinity, alignment: .leading)
+    private func topic(_ title: String, number: String, icon: String, text: String) -> some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack {
+                Text(number).font(.system(size: 12, weight: .semibold, design: .monospaced)).foregroundStyle(style.muted)
+                Spacer()
+                Image(systemName: icon).font(.system(size: 20)).foregroundStyle(style.orange)
+            }
+            Text(title).font(.system(size: 19, weight: .bold)).fontWidth(.condensed)
+            Text(text).font(.system(size: 13)).lineSpacing(3).foregroundStyle(style.muted).fixedSize(horizontal: false, vertical: true)
+        }.frame(maxWidth: .infinity, alignment: .leading).padding(20).pitPanel()
     }
 
-    private var lesson: some View {
-        VStack(alignment: .leading, spacing: 24) {
-            Text(session.challenge.topic).font(.custom("AvenirNext-Bold", size: 32))
-            HStack(alignment: .top, spacing: 32) {
-                VStack(alignment: .leading, spacing: 22) {
+    private func lesson(compact: Bool) -> some View {
+        VStack(alignment: .leading, spacing: 22) {
+            HStack {
+                VStack(alignment: .leading, spacing: 9) {
+                    Text("PIT BRIEFING / 0\(session.index + 1)")
+                        .font(.system(size: 11, weight: .semibold, design: .monospaced)).tracking(1.5).foregroundStyle(style.orange)
+                    Text(session.challenge.topic).font(.system(size: 36, weight: .heavy)).fontWidth(.condensed)
+                }
+                Spacer()
+                Image(systemName: icons[session.index]).font(.system(size: 34, weight: .light)).foregroundStyle(style.muted)
+            }
+            let layout = compact ? AnyLayout(VStackLayout(alignment: .leading, spacing: 20)) : AnyLayout(HStackLayout(alignment: .top, spacing: 24))
+            layout {
+                VStack(alignment: .leading, spacing: 24) {
+                    Text(["OFF THE STARTING LINE", "AT THE GEARBOX", "BEFORE THE NEXT RUN"][session.index])
+                        .font(.system(size: 11, weight: .bold, design: .monospaced)).tracking(1).foregroundStyle(style.muted)
                     Text(session.challenge.lesson).font(.system(size: 18)).lineSpacing(7)
                         .fixedSize(horizontal: false, vertical: true)
-                    Text("Change a setting and watch what happens.")
-                        .font(.system(size: 14)).foregroundStyle(style.muted)
+                    Divider()
+                    Label("Adjust the bench test, then take it onto the field.", systemImage: "slider.horizontal.3")
+                        .font(.system(size: 13)).foregroundStyle(style.muted)
                     Button { session.drive() } label: { Label("Take the wheel", systemImage: "arrow.right") }
                         .buttonStyle(PrimaryButton()).keyboardShortcut(.defaultAction)
-                        .accessibilityIdentifier("try-challenge")
-                        .controllerFocus(.start, session: session)
-                }.frame(maxWidth: .infinity, alignment: .leading)
+                        .accessibilityIdentifier("try-challenge").controllerFocus(.start, session: session)
+                }.frame(maxWidth: .infinity, alignment: .leading).padding(26).pitPanel()
                 LessonExperiment(index: session.index, setting: $session.experimentSetting)
                     .controllerFocus(.experiment, session: session).id(session.index)
-                    .frame(maxWidth: .infinity).frame(minHeight: 340)
+                    .frame(maxWidth: .infinity)
             }
-            .padding(28).background(style.surface, in: RoundedRectangle(cornerRadius: 18))
         }
     }
 
@@ -258,7 +272,7 @@ struct RallyContent: View {
         VStack(spacing: 0) {
             HStack(alignment: .center, spacing: 28) {
                 VStack(alignment: .leading, spacing: 5) {
-                    Text(session.phase == .practice ? "PRACTICE ARENA" : session.challenge.topic.uppercased())
+                    Text(session.phase == .practice ? "PRACTICE / DRIVER TRAINING" : "FIELD CHALLENGE / 0\(session.index + 1) / " + session.challenge.topic.uppercased())
                         .font(.system(size: 10, weight: .semibold, design: .monospaced)).tracking(1.2)
                         .foregroundStyle(Color.white.opacity(0.55))
                     Text(session.phase == .practice ? "Get comfortable at the controls. Drive into each of the three bays." : session.challenge.question)
@@ -281,7 +295,7 @@ struct RallyContent: View {
                     Color.black.opacity(0.65)
                     VStack(spacing: 18) {
                         Image(systemName: "pause.circle").font(.system(size: 38))
-                        Text("Paused").font(.title.bold())
+                        Text("DRIVE PAUSED").font(.system(size: 24, weight: .bold, design: .monospaced))
                         Button("Resume driving") { session.togglePause() }
                             .buttonStyle(.borderedProminent).tint(.white).foregroundStyle(Color(red: 0.10, green: 0.15, blue: 0.20))
                             .accessibilityIdentifier("resume-driving")
@@ -379,12 +393,13 @@ struct RallyContent: View {
             }
         }
         .padding(.horizontal, 28).padding(.vertical, 18).frame(maxWidth: .infinity, minHeight: 120)
-        .background(style.surface, in: RoundedRectangle(cornerRadius: 14))
+        .background(style.surface).overlay(alignment: .top) { Rectangle().fill(style.orange.opacity(0.65)).frame(height: 2) }
     }
 
     private var controls: some View {
-        VStack(alignment: .leading, spacing: 24) {
-            Text("Appearance & controls").font(.title2.bold())
+        VStack(alignment: .leading, spacing: 20) {
+            Text("DRIVER STATION").font(.system(size: 10, weight: .semibold, design: .monospaced)).tracking(1.5).foregroundStyle(style.orange)
+            Text("Appearance & controls").font(.system(size: 26, weight: .bold)).fontWidth(.condensed)
             Picker("Appearance", selection: $session.appearance) {
                 ForEach(RallyAppearance.allCases, id: \.rawValue) { option in
                     Text(option.title).tag(option)
@@ -420,7 +435,7 @@ struct RallyContent: View {
         VStack(alignment: .leading, spacing: 28) {
             HStack {
                 VStack(alignment: .leading, spacing: 10) {
-                    Text("Back in the pits.").font(.custom("AvenirNext-Heavy", size: 40))
+                    Text("Match review").font(.system(size: 40, weight: .heavy)).fontWidth(.condensed)
                     Text("Three ideas to take into your next robot build.")
                         .font(.system(size: 17)).foregroundStyle(style.muted)
                 }
@@ -439,15 +454,51 @@ struct RallyContent: View {
                             .fixedSize(horizontal: false, vertical: true)
                     }
                     Spacer()
-                    Image(systemName: session.selections[index] == Challenge.sample[index].correct ? "checkmark.circle.fill" : "arrow.counterclockwise.circle")
-                        .foregroundStyle(style.blue)
+                    Label(session.selections[index] == Challenge.sample[index].correct ? "Correct" : "Review", systemImage: session.selections[index] == Challenge.sample[index].correct ? "checkmark.circle.fill" : "arrow.counterclockwise.circle")
+                        .font(.system(size: 11, weight: .semibold)).foregroundStyle(session.selections[index] == Challenge.sample[index].correct ? style.success : style.orange).fixedSize()
                 }.padding(24).frame(maxWidth: .infinity, alignment: .leading)
-                    .background(style.surface, in: RoundedRectangle(cornerRadius: 14))
+                    .pitPanel()
                     .controllerFocus(.review(index), session: session)
             }
             Button { session.start() } label: { Label("Take another lap", systemImage: "arrow.counterclockwise") }
                 .buttonStyle(PrimaryButton()).keyboardShortcut(.defaultAction)
                 .controllerFocus(.start, session: session)
         }
+    }
+}
+
+private struct PitPanel: ViewModifier {
+    @Environment(\.rallyStyle) private var style
+    func body(content: Content) -> some View {
+        content.background(style.surface, in: RoundedRectangle(cornerRadius: 8))
+            .overlay(RoundedRectangle(cornerRadius: 8).stroke(style.ink.opacity(0.12), lineWidth: 1))
+    }
+}
+extension View {
+    func pitPanel() -> some View { modifier(PitPanel()) }
+}
+
+struct RobotDisplay: View {
+    var body: some View {
+        ZStack {
+            Canvas { context, size in
+                var grid = Path()
+                for x in stride(from: 0.0, through: size.width, by: 24) {
+                    grid.move(to: CGPoint(x: x, y: 0)); grid.addLine(to: CGPoint(x: x, y: size.height))
+                }
+                for y in stride(from: 0.0, through: size.height, by: 24) {
+                    grid.move(to: CGPoint(x: 0, y: y)); grid.addLine(to: CGPoint(x: size.width, y: y))
+                }
+                context.stroke(grid, with: .color(.white.opacity(0.055)), lineWidth: 0.5)
+                let rect = CGRect(x: size.width * 0.15, y: size.height * 0.15, width: size.width * 0.7, height: size.height * 0.7)
+                context.stroke(Path(ellipseIn: rect), with: .color(.white.opacity(0.15)), style: StrokeStyle(lineWidth: 1, dash: [4, 6]))
+            }
+            RobotPortrait().padding(12)
+            VStack {
+                HStack { Text("ROVER / 01"); Spacer(); Image(systemName: "plus") }
+                Spacer()
+                HStack { Text("MECANUM DRIVE"); Spacer(); Text("4 WHEELS") }
+            }.font(.system(size: 9, weight: .medium, design: .monospaced)).tracking(1.5).foregroundStyle(.white.opacity(0.55)).padding(12)
+        }.accessibilityElement(children: .ignore).accessibilityLabel("Competition rover with aluminum chassis, mecanum wheels, and orange bumpers")
     }
 }

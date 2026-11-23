@@ -13,6 +13,8 @@ open '/tmp/robot-rally-swift/Build/Products/Debug/Robot Rally Swift.app'
 
 ## Current milestone
 
+Version 0.6 carries the competition-rover design through the app: a graphite pit-station home screen, numbered training cards, responsive pit briefings, instrument-style bench-test readouts, and a carpet-textured field with metal rails and orange answer bays. Match review labels each result as Correct or Review. Light and dark themes share the same layout; narrow windows stack the briefing and bench test with controller-aware scrolling. Driving physics, answer dwell timing, and the fixed-height feedback region are unchanged.
+
 Version 0.5.2 replaces the flat rover symbol with a detailed competition-robot illustration based on the actual game rover. It shows machined aluminum rails, black mecanum rollers, electronics, and padded orange bumpers on a steel-blue tile. The foreground is a transparent PNG in Icon Composer, with native default, dark, clear, and tinted exports. See [Design/ICON-REVIEW.md](Design/ICON-REVIEW.md) for previews, tradeoffs, and AI-assistance provenance.
 
 Version 0.5.1 adds an original layered rover app icon. It includes consistent default, dark, clear, and tinted appearances and uses Apple's system-rendered materials. The Xcode target includes `RobotRally/AppIcon.icon`; compatibility images are generated during the build. The initial vector design remains in Git history; current export commands, design review, and authorship records are in [Design/ICON-REVIEW.md](Design/ICON-REVIEW.md). Dock and Finder appearance is controlled by macOS, separately from the app's theme switcher.
@@ -39,7 +41,7 @@ While paused, use the D-pad and A to resume, restart, return home, or open setti
 
 Run `./Tests/check.sh` from this directory with Xcode's command-line tools selected. The checks feed simulated controller snapshots through the production input handler and verify lesson progression, settings, direct answers, practice, pause/resume, disconnect/reconnect, input repeats, preference persistence, and repainting an existing view when switching Light → Dark → Light. These checks do not replace physical Xbox controller testing.
 
-Version 0.4.1 adds a saved appearance preference. Open the keyboard icon in the top-right corner and choose System, Light, or Dark under Appearance. System follows macOS and is the default. The theme covers menus, lesson experiments, answer choices, feedback, and results; the driving arena keeps its dark floor in both themes.
+Version 0.4.1 adds a saved appearance preference. Open the sliders icon in the top-right corner and choose System, Light, or Dark under Appearance. System follows macOS and is the default. The theme covers menus, lesson experiments, answer choices, feedback, and results; the driving arena keeps its dark floor in both themes.
 
 Version 0.4 blends the detailed rover and arena with distinct blue, mint, and purple bays, short success effects, and a native Mac title bar and controls sheet. Practice driving first lets you visit all three bays without affecting lesson scores. Opening Controls pauses driving; resume when ready. Feedback sounds are optional and off by default. Reduce Motion suppresses the arena pulses, sparks, and tire trails as well as interface transitions. Command-R restarts from the lesson and challenge screens.
 
@@ -51,4 +53,4 @@ Version 0.2 adds a warm paper-colored interface, a detailed robot and marked fie
 
 ## Authorship and submission preparation
 
-Codex generated the initial Xcode project, SwiftUI interface, SpriteKit gameplay, controller input, sample educational text, and the visual and interaction updates through version 0.5 at the project owner's request. This prototype is a learning starting point. Keep an accurate record of subsequent individual work and AI assistance. The participant should understand, review, and meaningfully develop the implementation and write the required application essays themselves. Confirm the current competition requirements before submission. This repository is not a completed competition submission.
+Codex generated the initial Xcode project, SwiftUI interface, SpriteKit gameplay, controller input, sample educational text, and the visual and interaction updates through version 0.6 at the project owner's request. This prototype is a learning starting point. Keep an accurate record of subsequent individual work and AI assistance. The participant should understand, review, and meaningfully develop the implementation and write the required application essays themselves. Confirm the current competition requirements before submission. This repository is not a completed competition submission.

@@ -62,16 +62,26 @@ final class RallyScene: SKScene {
     }
 
     private func buildField() {
-        // Individual floor panels and rails give the arena depth without
-        // changing the flat, predictable driving surface.
-        let floor = box(CGSize(width: 796, height: 450), at: CGPoint(x: 420, y: 271), fill: NSColor(red: 0.18, green: 0.23, blue: 0.27, alpha: 1), radius: 18)
+        // Fine deterministic carpet grain avoids a board-game checkerboard.
+        let carpet = NSImage(size: NSSize(width: 796, height: 450))
+        carpet.lockFocus()
+        NSColor(red: 0.24, green: 0.27, blue: 0.29, alpha: 1).setFill()
+        NSRect(x: 0, y: 0, width: 796, height: 450).fill()
+        var seed: UInt64 = 427
+        for _ in 0..<28000 {
+            seed = seed &* 6364136223846793005 &+ 1
+            let x = CGFloat((seed >> 16) % 796)
+            let y = CGFloat((seed >> 32) % 450)
+            NSColor(white: (seed & 1 == 0) ? 0.8 : 0.05, alpha: 0.09).setFill()
+            NSRect(x: x, y: y, width: 1, height: 2).fill()
+        }
+        carpet.unlockFocus()
+        let floor = SKSpriteNode(texture: SKTexture(image: carpet))
+        floor.position = CGPoint(x: 420, y: 271)
         addChild(floor)
-        for column in 0..<8 {
-            for row in 0..<5 {
-                let light = (column + row) % 2 == 0
-                let panel = box(CGSize(width: 96, height: 85), at: CGPoint(x: 72 + column * 99, y: 92 + row * 88), fill: NSColor(white: light ? 0.36 : 0.32, alpha: 0.11), radius: 2)
-                addChild(panel)
-            }
+        for (x, color) in [(CGFloat(32), NSColor.systemRed), (CGFloat(808), NSColor.systemBlue)] {
+            let tape = box(CGSize(width: 10, height: 400), at: CGPoint(x: x, y: 271), fill: color.withAlphaComponent(0.65), radius: 0)
+            addChild(tape)
         }
         let railShadow = SKShapeNode(rect: CGRect(x: 19, y: 40, width: 802, height: 456), cornerRadius: 22)
         railShadow.strokeColor = .black.withAlphaComponent(0.6)
@@ -137,15 +147,15 @@ final class RallyScene: SKScene {
         bays.removeAllChildren()
         zones.removeAll()
         for (index, answer) in answers.enumerated() {
-            let zone = box(CGSize(width: 220, height: 136), at: destinations[index], fill: NSColor(red: 0.08, green: 0.15, blue: 0.24, alpha: 1), radius: 14)
-            let bayColor: NSColor = [blue, .systemMint, .systemPurple][index]
+            let zone = box(CGSize(width: 220, height: 136), at: destinations[index], fill: NSColor(red: 0.08, green: 0.15, blue: 0.24, alpha: 1), radius: 5)
+            let bayColor: NSColor = amber
             zone.strokeColor = bayColor.withAlphaComponent(0.8)
-            zone.lineWidth = 2.5
+            zone.lineWidth = 1.5
             let entry = box(CGSize(width: 86, height: 5), at: CGPoint(x: 0, y: -68), fill: bayColor, radius: 1)
             zone.addChild(entry)
-            let number = SKLabelNode(text: "\(index + 1)")
-            number.fontName = "AvenirNext-Bold"
-            number.fontSize = 23
+            let number = SKLabelNode(text: "0\(index + 1)")
+            number.fontName = "Menlo-Bold"
+            number.fontSize = 20
             number.fontColor = bayColor
             number.position.y = 33
             zone.addChild(number)

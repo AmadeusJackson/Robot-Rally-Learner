@@ -8,7 +8,7 @@ struct RobotPortrait: View {
             Image(nsImage: image)
                 .resizable().interpolation(.high).scaledToFit()
                 .padding(18)
-                .rotationEffect(.degrees(-16))
+                .rotationEffect(.degrees(14))
                 .shadow(color: Color.black.opacity(0.24), radius: 18, x: 10, y: 16)
         }
     }
@@ -39,6 +39,7 @@ struct LessonExperiment: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 22) {
+            Label("BENCH TEST", systemImage: "slider.horizontal.3").font(.system(size: 11, weight: .bold, design: .monospaced)).tracking(1.5).foregroundStyle(style.orange)
             Text(index == 0 ? "KEEP THE MASS. CHANGE THE FORCE." : index == 1 ? "TURN THE MOTOR. WATCH THE OUTPUT." : "SAME BATTERY. DIFFERENT DEMAND.")
                 .font(.system(size: 10, weight: .semibold, design: .monospaced))
                 .tracking(0.8).foregroundStyle(style.muted)
@@ -50,14 +51,14 @@ struct LessonExperiment: View {
             }
         }
         .padding(24)
-        .background(style.paper, in: RoundedRectangle(cornerRadius: 14))
+        .pitPanel()
     }
 
     private func metric(_ value: String, _ label: String) -> some View {
         VStack(alignment: .leading, spacing: 3) {
-            Text(value).font(.custom("AvenirNext-Bold", size: 29)).monospacedDigit().foregroundStyle(style.blue)
+            Text(value).font(.system(size: 27, weight: .semibold, design: .monospaced)).monospacedDigit().foregroundStyle(style.blue)
             Text(label).font(.system(size: 12)).foregroundStyle(style.muted)
-        }.frame(maxWidth: .infinity, alignment: .leading)
+        }.frame(maxWidth: .infinity, alignment: .leading).padding(12).background(style.paper, in: RoundedRectangle(cornerRadius: 5))
     }
 
     private var force: some View {
@@ -99,7 +100,9 @@ struct LessonExperiment: View {
 
     private func gear(size: CGFloat, teeth: Int, angle: Double, color: Color) -> some View {
         ZStack {
-            GearShape(teeth: teeth).fill(color)
+            GearShape(teeth: teeth).fill(LinearGradient(colors: [Color.gray.opacity(0.5), color.opacity(0.8), Color.gray], startPoint: .topLeading, endPoint: .bottomTrailing))
+            GearShape(teeth: teeth).stroke(style.ink.opacity(0.35), lineWidth: 1)
+            Circle().stroke(style.ink.opacity(0.3), lineWidth: 2).frame(width: size * 0.65, height: size * 0.65)
             Circle().fill(style.paper).frame(width: size * 0.38, height: size * 0.38)
             Capsule().fill(style.paper).frame(width: 5, height: size * 0.16).offset(y: -size * 0.31)
         }.frame(width: size, height: size).rotationEffect(.degrees(angle))
