@@ -100,18 +100,8 @@ struct RallyContent: View {
                 header(compact: geometry.size.width < 850)
                 Rectangle().fill(style.ink.opacity(0.12)).frame(height: 1)
                 if session.isDriving || session.phase == .feedback {
-                    GeometryReader { gameSpace in
-                        ScrollViewReader { proxy in
-                        ScrollView(.vertical) {
-                            game(compact: geometry.size.width < 850)
-                                .frame(height: max(gameSpace.size.height, geometry.size.width < 850 ? 570 : 550))
-                        }
-                        .scrollBounceBehavior(.basedOnSize)
-                        .onChange(of: session.focus) { _, target in
-                            if session.controllerUsed { proxy.scrollTo(target, anchor: .center) }
-                        }
-                        }
-                    }
+                    game(compact: geometry.size.width < 850 || geometry.size.height < 700)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else {
                 ScrollViewReader { proxy in
                 ScrollView {
@@ -131,7 +121,7 @@ struct RallyContent: View {
                 }
                 }
                 }
-                if session.controllerConnected {
+                if session.controllerConnected && !session.isDriving && session.phase != .feedback {
                     Text(session.controllerHint)
                         .font(.system(size: 11, weight: .medium)).foregroundStyle(style.muted)
                         .multilineTextAlignment(.center).fixedSize(horizontal: false, vertical: true)
@@ -299,7 +289,7 @@ struct RallyContent: View {
                         .font(.system(size: 10, weight: .semibold, design: .monospaced)).tracking(1.2)
                         .foregroundStyle(Color.white.opacity(0.55))
                     Text(session.phase == .practice ? "Get comfortable at the controls. Drive into each of the three bays." : session.challenge.question)
-                        .font(.system(size: 19, weight: .medium)).lineSpacing(3)
+                        .font(.system(size: compact ? 16 : 19, weight: .medium)).lineSpacing(compact ? 1 : 3)
                         .fixedSize(horizontal: false, vertical: true)
                         .foregroundStyle(.white)
                 }
@@ -308,10 +298,10 @@ struct RallyContent: View {
                     .buttonStyle(.bordered).tint(.white).foregroundStyle(.white)
                     .disabled(!session.isDriving)
                     .accessibilityIdentifier("pause-driving")
-            }.padding(.horizontal, 28).padding(.vertical, 18)
+            }.padding(.horizontal, compact ? 16 : 28).padding(.vertical, compact ? 10 : 18)
             GeometryReader { arena in
             ZStack {
-                let width = min(arena.size.width, arena.size.height * 840 / 520)
+                let width = max(0, min(arena.size.width, arena.size.height * 840 / 520))
                 FieldView(scene: session.scene, active: session.isDriving && !session.paused)
                     .frame(width: width, height: width * 520 / 840)
                     .accessibilityLabel("Driving arena. Choose an answer by driving or use Choose directly below.")
@@ -345,8 +335,8 @@ struct RallyContent: View {
                 Text("ESC to pause")
             }
             .foregroundStyle(.white.opacity(0.65)).font(.system(size: 12))
-            .padding(.horizontal, 28).padding(.vertical, 12)
-            feedback(compact: compact).frame(height: compact ? 190 : 132).background(style.paper)
+            .padding(.horizontal, compact ? 16 : 28).padding(.vertical, compact ? 8 : 12)
+            feedback(compact: compact).frame(height: 132).background(style.paper)
         }
         .background(Color(red: 0.075, green: 0.11, blue: 0.17))
     }
@@ -381,8 +371,7 @@ struct RallyContent: View {
 
     @ViewBuilder
     private func feedback(compact: Bool) -> some View {
-        let layout = compact ? AnyLayout(VStackLayout(alignment: .leading, spacing: 10)) : AnyLayout(HStackLayout(alignment: .center, spacing: 22))
-        layout {
+        HStack(alignment: .center, spacing: compact ? 12 : 22) {
             if session.phase == .practice {
                 if !compact { Image(systemName: session.practiceVisits == 3 ? "checkmark.circle.fill" : "steeringwheel")
                     .font(.system(size: 28)).foregroundStyle(style.orange) }
@@ -403,7 +392,7 @@ struct RallyContent: View {
                     .font(.system(size: 28)).foregroundStyle(correct ? style.success : style.orange) }
                 VStack(alignment: .leading, spacing: 6) {
                     Text(correct ? "You’ve got it." : "Here’s what happens.").font(.system(size: 17, weight: .bold))
-                    Text(session.challenge.explanation).font(.system(size: 14)).lineSpacing(3)
+                    Text(session.challenge.explanation).font(.system(size: compact ? 13 : 14)).lineSpacing(compact ? 1 : 3)
                         .fixedSize(horizontal: false, vertical: true)
                 }.frame(maxWidth: .infinity, alignment: .leading)
                 Button(session.index == 2 ? "Finish rally" : "Next lesson") { session.next() }
@@ -420,7 +409,7 @@ struct RallyContent: View {
                 Spacer()
             }
         }
-        .padding(.horizontal, 28).padding(.vertical, 18).frame(maxWidth: .infinity, minHeight: 120)
+        .padding(.horizontal, compact ? 16 : 28).padding(.vertical, compact ? 10 : 18).frame(maxWidth: .infinity, minHeight: 120)
         .background(style.surface).overlay(alignment: .top) { Rectangle().fill(style.orange.opacity(0.65)).frame(height: 2) }
     }
 

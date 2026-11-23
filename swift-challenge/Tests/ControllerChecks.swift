@@ -153,6 +153,31 @@ struct ControllerChecks {
         precondition(edges.events(.init(y: -1), time: 0.2).isEmpty)
         precondition(edges.events(.init(y: -1), time: 0.51) == [.down])
         precondition(edges.events(.init(x: 0.12), time: 0.7).isEmpty)
+        // The entire driving view must fit without a scroll view at every supported size.
+        func descendants(_ view: NSView) -> [NSView] {
+            view.subviews.flatMap { [$0] + descendants($0) }
+        }
+        for size in [CGSize(width: 640, height: 560), CGSize(width: 820, height: 660), CGSize(width: 1440, height: 900)] {
+            for phase in ["driving", "practice", "paused", "feedback"] {
+                let layoutSession = RallySession()
+                layoutSession.start()
+                layoutSession.drive()
+                if phase == "practice" { layoutSession.practice() }
+                if phase == "paused" { layoutSession.pause() }
+                if phase == "feedback" { layoutSession.answer(0) }
+                let layoutHost = NSHostingView(rootView: RallyView(session: layoutSession))
+                layoutHost.frame = CGRect(origin: .zero, size: size)
+                RunLoop.main.run(until: Date(timeIntervalSinceNow: 0.05))
+                layoutHost.layoutSubtreeIfNeeded()
+                let children = descendants(layoutHost)
+                precondition(!children.contains { $0 is NSScrollView }, "Driving must never scroll")
+                let field = children.compactMap { $0 as? DrivingView }.first!
+                let rect = field.convert(field.bounds, to: layoutHost)
+                precondition(layoutHost.bounds.insetBy(dx: -1, dy: -1).contains(rect), "Arena must fit in window")
+                precondition(rect.height > 150 && abs(rect.width / rect.height - 840.0 / 520.0) < 0.01)
+            }
+        }
+        print("PASS: driving, practice, pause, and feedback fit without scrolling at 640×560, 820×660, and 1440×900")
         print("PASS: controller-only lessons, practice, settings, answers, results, restart, focus, disconnect, held inputs, saved preferences, and live light/dark/light repaint")
     }
 }

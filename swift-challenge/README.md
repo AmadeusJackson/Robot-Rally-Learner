@@ -13,7 +13,9 @@ open '/tmp/robot-rally-swift/Build/Products/Debug/Robot Rally Swift.app'
 
 ## Current milestone
 
-Version 0.6.1 supports windows down to 640 × 560 points. Narrow windows use a compact header and stacked home, lesson, and feedback layouts. The arena fits its available width and height without stretching. Short windows scroll rather than clip gameplay controls; controller focus scrolls the selected action into view. Settings fit the parent window and scroll when needed. Feedback height depends on window width, not whether an answer was correct.
+Version 0.6.2 keeps the complete driving, practice, pause, and answer-feedback screen inside the window without scrolling. Compact question and feedback layouts leave room for a proportionally scaled arena, including at 640 × 560 points. Menus and settings can still scroll. The universal macOS download supports Apple silicon and Intel; it is ad-hoc signed, not Developer ID signed or notarized.
+
+Version 0.6.1 supports windows down to 640 × 560 points. Narrow windows use a compact header and stacked home, lesson, and feedback layouts. The arena fits its available width and height without stretching. This version initially scrolled short gameplay windows; version 0.6.2 replaces that with a fully fitting driving layout. Controller focus scrolls selected actions in menus into view. Settings fit the parent window and scroll when needed. Feedback height depends on window width, not whether an answer was correct.
 
 Version 0.6 carries the competition-rover design through the app: a graphite pit-station home screen, numbered training cards, responsive pit briefings, instrument-style bench-test readouts, and a carpet-textured field with metal rails and orange answer bays. Match review labels each result as Correct or Review. Light and dark themes share the same layout; narrow windows stack the briefing and bench test with controller-aware scrolling. Driving physics, answer dwell timing, and the fixed-height feedback region are unchanged.
 
@@ -41,7 +43,7 @@ While paused, use the D-pad and A to resume, restart, return home, or open setti
 
 ### Regression checks
 
-Run `./Tests/check.sh` from this directory with Xcode's command-line tools selected. The checks feed simulated controller snapshots through the production input handler and verify lesson progression, settings, direct answers, practice, pause/resume, disconnect/reconnect, input repeats, preference persistence, and repainting an existing view when switching Light → Dark → Light. These checks do not replace physical Xbox controller testing.
+Run `./Tests/check.sh` from this directory with Xcode's command-line tools selected. The checks feed simulated controller snapshots through the production input handler and verify lesson progression, settings, direct answers, practice, pause/resume, disconnect/reconnect, input repeats, preference persistence, repainting an existing view when switching Light → Dark → Light, and ensuring driving views have no scroll view and keep the arena within the window at three supported sizes. These checks do not replace physical Xbox controller testing.
 
 Version 0.4.1 adds a saved appearance preference. Open the sliders icon in the top-right corner and choose System, Light, or Dark under Appearance. System follows macOS and is the default. The theme covers menus, lesson experiments, answer choices, feedback, and results; the driving arena keeps its dark floor in both themes.
 
