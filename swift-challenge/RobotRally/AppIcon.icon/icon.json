@@ -1,0 +1,49 @@
+{
+  "fill-specializations": [
+    {
+      "value": {
+        "solid": "srgb:0.49412,0.57255,0.61569,1.00000"
+      }
+    },
+    {
+      "appearance": "dark",
+      "value": {
+        "solid": "srgb:0.25882,0.34118,0.38824,1.00000"
+      }
+    }
+  ],
+  "groups": [
+    {
+      "name": "Competition rover",
+      "layers": [
+        {
+          "name": "Machined chassis and orange bumpers",
+          "image-name": "competition-rover.png",
+          "fill": "automatic",
+          "glass": false,
+          "position": {
+            "scale": 0.74,
+            "translation-in-points": [
+              0,
+              0
+            ]
+          }
+        }
+      ],
+      "specular": false,
+      "shadow": {
+        "kind": "neutral",
+        "opacity": 0.28
+      },
+      "translucency": {
+        "enabled": false,
+        "value": 0
+      }
+    }
+  ],
+  "supported-platforms": {
+    "squares": [
+      "macOS"
+    ]
+  }
+}
